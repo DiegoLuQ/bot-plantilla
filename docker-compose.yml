@@ -7,7 +7,7 @@ services:
     #   - "5000:5000"
     command: python main.py
     expose:
-      - 81
+      - 52
     volumes:
       - ./app:/app/
     environment:
