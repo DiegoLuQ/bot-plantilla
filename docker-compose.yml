@@ -1,22 +1,22 @@
 version: '3.8'
 
 services:
-  botwsp_24:
+  bot:
     build: .
     # ports:
     #   - "5000:5000"
     command: python main.py
     expose:
-      - 94
+      - 81
     volumes:
       - ./app:/app/
     environment:
       - SERVER_HOST=mysqldb_mariadb_1
 
-  nginx_wsp_2:
+  nginx:
     image: nginx:latest
     ports:
-      - "94:80"
+      - "80:80"
     environment:
       - VIRTUAL_PORT=80
       - VIRTUAL_HOST=wsp.diego-luque.com
@@ -24,7 +24,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
-      - botwsp_24
+      - bot
 
 networks:
   default:

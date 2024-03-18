@@ -11,6 +11,6 @@ COPY ./app/main.py /app/
 # Instala las dependencias de Python
 RUN pip install -r ./app/requirements.txt
 
-EXPOSE 94
+EXPOSE 81
 # Expone el puerto 5000 para que Flask pueda recibir solicitudes
 CMD ["python", "main.py"]
