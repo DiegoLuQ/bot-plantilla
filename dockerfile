@@ -7,10 +7,9 @@ WORKDIR /app
 # Copia los archivos de la aplicación y los requisitos al contenedor
 COPY ./app/requirements.txt ./app/requirements.txt
 
-COPY ./app/main.py /app/
-# Instala las dependencias de Python
-RUN pip install -r ./app/requirements.txt
-
+COPY ./app /app/
 EXPOSE 94
+# Instala las dependencias de Python
+RUN pip install --no-cache-dir --upgrade -r ./app/requirements.txt
+
 # Expone el puerto 5000 para que Flask pueda recibir solicitudes
-CMD ["python", "main.py"]
