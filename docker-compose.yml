@@ -7,7 +7,7 @@ services:
     #   - "5000:5000"
     command: python main.py
     expose:
-      - 52
+      - 94
     volumes:
       - ./app:/app/
     environment:
@@ -16,7 +16,7 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - "8090:80"
+      - "141:80"
     environment:
       - VIRTUAL_PORT=80
       - VIRTUAL_HOST=wsp.diego-luque.com
