@@ -16,7 +16,7 @@ services:
   nginx_wsp_2:
     image: nginx:latest
     ports:
-      - 2024:80"
+      - "94:80"
     environment:
       - VIRTUAL_PORT=80
       - VIRTUAL_HOST=wsp.diego-luque.com
