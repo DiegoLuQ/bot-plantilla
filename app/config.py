@@ -13,6 +13,6 @@ class Settings:
     token = environ.get('token_access')
     wsp_url = environ.get('WSP_URL')
     wsp_token = environ.get('TOKEN_WSP')
-
+    doc_pdf = environ.get("DOC_PDF")
 
 settings = Settings()
