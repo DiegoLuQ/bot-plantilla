@@ -17,11 +17,11 @@ async def verify_token(request: Request):
         token = request.query_params.get("hub.verify_token")
         challenge = request.query_params.get("hub.challenge")
 
-        if token is not None and challenge is not None and token == access_token:
-            # En FastAPI, puedes devolver directamente el challenge como una respuesta de texto plano
+        if token == access_token and challenge != None and token != None:
             return challenge
         else:
-            raise HTTPException(status_code=400, detail="Invalid request")
+            return 'Token incorrecto'
+        
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
