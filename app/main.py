@@ -10,9 +10,11 @@ def home():
 
 @app.get('/webhook')
 def verify_token(hub_verify_token:str = Query(None, alias="hub.verify_token"), hub_challenge: str = Query(None, alias='hub.challenge')):
+    print(sett.token)
     try:
       access_token = sett.token
       if hub_verify_token == access_token and hub_challenge:
+          print("pasaste")
           return hub_challenge
       else:
           return 'Token incorrecto'
