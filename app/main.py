@@ -12,7 +12,7 @@ def home():
 def verify_token(hub_verify_token:str = Query(None, alias="hub.verify_token"), hub_challenge: str = Query(None, alias='hub.challenge')):
     print(sett.token)
     try:
-      access_token = sett.token
+      access_token = "475811994@4s-4.D455"
       if hub_verify_token is not None and hub_challenge is not None and hub_verify_token == access_token:
           print("pasaste")
           return {"challenge": hub_challenge}
