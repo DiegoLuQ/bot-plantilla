@@ -8,7 +8,7 @@ app = FastAPI()
 def home():
     return {"hola":sett.token}
 
-@app.get('/webhook')
+@app.get('/whatsapp')
 def verify_token(hub_verify_token:str = Query(None, alias="hub.verify_token"), hub_challenge: str = Query(None, alias='hub.challenge')):
     print(sett.token)
     try:
@@ -21,7 +21,7 @@ def verify_token(hub_verify_token:str = Query(None, alias="hub.verify_token"), h
     except Exception as e:
       return e, 403
     
-@app.post('/webhook')
+@app.post('/whatsapp')
 async def recibir_mensaje(request:Request):
     try:
         body = await request.json()
