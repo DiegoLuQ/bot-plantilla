@@ -13,9 +13,9 @@ def verify_token(hub_verify_token:str = Query(None, alias="hub.verify_token"), h
     print(sett.token)
     try:
       access_token = sett.token
-      if hub_verify_token == access_token and hub_challenge:
+      if hub_verify_token is not None and hub_challenge is not None and hub_verify_token == access_token:
           print("pasaste")
-          return hub_challenge
+          return {"challenge": hub_challenge}
       else:
           return 'Token incorrecto'
     except Exception as e:
