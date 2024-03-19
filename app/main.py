@@ -4,26 +4,23 @@ import services
 import uvicorn
 app = FastAPI()
 
+WEBHOOK_VERIFY_TOKEN = "415teahicnjukkaka"
+
 @app.get("/")
 def home():
     return {"hola":sett.token}
 
-@app.get('/whatsapp')
-async def verify_token(request: Request):
-    try:
-        access_token = "asd7s7s8a5s4d8asd5diego"
-        # FastAPI no tiene un objeto request.args directamente, pero puedes acceder a los parámetros de consulta
-        # de la siguiente manera:
-        token = request.query_params.get("hub.verify_token")
-        challenge = request.query_params.get("hub.challenge")
-
-        if token == access_token and challenge != None and token != None:
-            return challenge
-        else:
-            return 'Token incorrecto'
-        
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@app.get("/webhook")
+def webhook(hub_mode: str = Query(default=None, alias="hub.mode"),
+            hub_verify_token: str = Query(default=None, alias="hub.verify_token"),
+            hub_challenge: str = Query(default=None, alias="hub.challenge")):
+    # Comprueba que el modo y el token enviados son correctos
+    if hub_mode == "subscribe" and hub_verify_token == WEBHOOK_VERIFY_TOKEN:
+        # Responde con el token de desafío de la solicitud
+        return hub_challenge
+    else:
+        # Responde con '403 Forbidden' si los tokens de verificación no coinciden
+        raise HTTPException(status_code=403, detail="Forbidden")
     
 @app.post('/whatsapp')
 async def recibir_mensaje(request:Request):
