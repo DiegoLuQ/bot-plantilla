@@ -246,7 +246,7 @@ async def enviar_mensaje_usuario(list_for):
 def mostrar_menu_principal(number, messageId):
     body = "Hola!, Bienvenido a SoporteSF. Navega por nuestras opciones"
     footer = "Equipo SF"
-    options  = ["📟 Enviar Carta", "🔎 visitar web", "🔄 actualizar ticket"]
+    options  = ["📟 Enviar PDF", "🔎 visitar web", "🔄 actualizar ticket"]
     replyButton_Data = buttonReply_Message(
         number, options, body, footer, "sed1", messageId)
     # list_for.append(replyButton_Data)
