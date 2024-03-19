@@ -9,17 +9,21 @@ def home():
     return {"hola":sett.token}
 
 @app.get('/whatsapp')
-def verify_token(hub_verify_token:str = Query(None, alias="hub.verify_token"), hub_challenge: str = Query(None, alias='hub.challenge')):
-    print(sett.token)
+async def verify_token(request: Request):
     try:
-      access_token = "475811994@4s-4.D455"
-      if hub_verify_token is not None and hub_challenge is not None and hub_verify_token == access_token:
-          print("pasaste")
-          return {"challenge": hub_challenge}
-      else:
-          return 'Token incorrecto'
+        access_token = "asd7s7s8a5s4d8asd5diego"
+        # FastAPI no tiene un objeto request.args directamente, pero puedes acceder a los parámetros de consulta
+        # de la siguiente manera:
+        token = request.query_params.get("hub.verify_token")
+        challenge = request.query_params.get("hub.challenge")
+
+        if token is not None and challenge is not None and token == access_token:
+            # En FastAPI, puedes devolver directamente el challenge como una respuesta de texto plano
+            return challenge
+        else:
+            raise HTTPException(status_code=400, detail="Invalid request")
     except Exception as e:
-      return e, 403
+        raise HTTPException(status_code=400, detail=str(e))
     
 @app.post('/whatsapp')
 async def recibir_mensaje(request:Request):
