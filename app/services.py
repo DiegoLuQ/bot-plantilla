@@ -81,7 +81,8 @@ def buttonReply_Message(number, options, body, footer, sedd, messageId):
         }
     )
     return data 
-def ButtonImage_Message(number, body, footer):
+def ButtonImage_Message(number, body, footer, options):
+    
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
@@ -92,14 +93,14 @@ def ButtonImage_Message(number, body, footer):
             "header": {
                 "type":  "image",
                 "image": {
-                    "link": "https://i.postimg.cc/4xzJdjY2/Personal-Portafolio.jpg"
+                    "link": "https://dinahosting.com/blog/upload/2022/07/tamanos-imagenes-redes-sociales-2024_dinahosting.png"
                 }
             },
             "body": {
                 "text": body 
             },
             "footer": {
-                "text": "Marca Kendall - SF"
+                "text": footer
             },
             "action": {
                 "buttons": [
@@ -107,21 +108,21 @@ def ButtonImage_Message(number, body, footer):
                     "type": "reply",
                     "reply": {
                         "id": "unique-postback-id-2",
-                        "title": "Agregar a carrito"
+                        "title": "Instagram"
                     }
                 },
                 {
                     "type": "reply",
                     "reply": {
                         "id": "unique-postback-id-1",
-                        "title": "buscar producto"
+                        "title": "Facebook"
                     }
                 },
                 {
                     "type": "reply",
                     "reply": {
                         "id": "unique-postback-id-3",
-                        "title": "revisar en web"
+                        "title": "TikTok"
                     }
                 }
             ]
@@ -129,13 +130,105 @@ def ButtonImage_Message(number, body, footer):
         }
     })
     return data
+def contact_Message(number):
+    data = json.dumps({
+    "messaging_product": "whatsapp",
+    "to": number,
+    "type": "contacts",
+    "contacts": [
+        {
+            "addresses": [
+                {
+                    "street": "Por redes sociales",
+                    "city": "Iquique",
+                    "state": "Alto Hospicio",
+                    "country": "Chile",
+                    "type": "HOME"
+                }
+            ],
+            "birthday": "1963-07-25",
+            "emails": [
+                {
+                    "email": "santiago@santiagofiltros.cl",
+                    "type": "WORK"
+                }
+            ],
+            "name": {
+                "first_name": "Santiago",
+                "last_name": "Luque",
+                "formatted_name": "Santiago Luque"
+            },
+            "org": {
+                "company": "Santiago Filtros",
+                "department": "Ventas",
+                "title": "Vendedor"
+            },
+            "phones": [
+                {
+                    "phone": "+56 98173 2415",
+                    "wa_id": "56981732415",
+                    "type": "WORK" #"<HOME|WORK>"
+                }
+            ],
+            "urls": [
+                {
+                    "url": "https://www.instagram.com/santiagofiltros/",
+                    "type": "WORK"
+                }
+            ]
+        }
+        #PARA ENVIAR OTRO CONTACTO
+        # {
+        #     "addresses": [
+        #         {
+        #             "street": "Por redes sociales",
+        #             "city": "Iquique",
+        #             "state": "Alto Hospicio",
+        #             "country": "Chile",
+        #             "type": "HOME"
+        #         }
+        #     ],
+        #     "birthday": "1963-07-25",
+        #     "emails": [
+        #         {
+        #             "email": "santiago@santiagofiltros.cl",
+        #             "type": "WORK"
+        #         }
+        #     ],
+        #     "name": {
+        #         "first_name": "Santiago",
+        #         "last_name": "Luque",
+        #         "formatted_name": "Santiago Luque"
+        #     },
+        #     "org": {
+        #         "company": "Santiago Filtros",
+        #         "department": "Ventas",
+        #         "title": "Vendedor"
+        #     },
+        #     "phones": [
+        #         {
+        #             "phone": "+56 98173 2415",
+        #             "wa_id": "56981732415",
+        #             "type": "WORK" #"<HOME|WORK>"
+        #         }
+        #     ],
+        #     "urls": [
+        #         {
+        #             "url": "https://www.instagram.com/santiagofiltros/",
+        #             "type": "HOME"
+        #         }
+        #     ]
+        # }
+    ]
+})
+    return data
 def textUrl_Message(number):
     data = json.dumps({
     "messaging_product": "whatsapp",
     "to": number,
     "text": {
         "preview_url": True,
-        "body": "Please visit https://linaresupp.cl to inspire your day!"
+        "body": "Claro que si!, Visitanos en https://linaresupp.cl para ayudarte en tu negocio, no dudes en llamarnos!"
     }
 })
     return data
@@ -154,7 +247,6 @@ def document_Message(number, url, caption, filename):
         }
     )
     return data
-
 def location_Message(number, messageId):
     data = json.dumps({
     "messaging_product": "whatsapp",
@@ -173,7 +265,7 @@ def location_Message(number, messageId):
     , 
 })
     return data
-def listImage_Message(number):
+def listaDeOpciones_Message(number):
     data = json.dumps({
     "messaging_product": "whatsapp",
     "recipient_type": "individual",
@@ -183,7 +275,7 @@ def listImage_Message(number):
         "type": "list",
         "header": {
             "type": "text",
-            "text": "Filtros en Promocion"
+            "text": "Listado de Categorias"
         },
         "body": {
             "text": "30% de Descuento"
@@ -195,25 +287,51 @@ def listImage_Message(number):
             "button": "Ver productos",
             "sections": [
                 {
-                    "title": "Filtro de aire",
+                    "title": "Filtro de aire 🍃",
                     "rows": [
                         {
-                            "id": "unique-row-identifier1",
-                            "title": "row-title-content",
-                            "description": "row-description-content"
+                            "id": "aire-identifier1",
+                            "title": "F. Aire PDF",
+                            # "description": "row-description-content"
+                        },
+                        {
+                            "id": "aire-identifier2",
+                            "title": "F. Aire WEb",
+                            # "description": "row-description-content"
                         }
                     ]
                 },
                 {
-                    "title": "Filtro de aceite",
+                    "title": "Filtro de Combustible ⛽",
                     "rows": [
                         {
-                            "id": "unique-row-identifier2",
-                            "title": "row-title-content",
-                            "description": "row-description-content"
+                            "id": "combustible-identifier1",
+                            "title": "F. Combustible PDF ",
+                            # "description": "row-description-content"
+                        },
+                        {
+                            "id": "combustible-identifier2",
+                            "title": "F. Combustible WEb",
+                            # "description": "row-description-content"
                         }
                     ]
-                }
+                },
+                {
+                    "title": "Filtro de aceite 🏁",
+                    "rows": [
+                        {
+                            "id": "aceite-identifier1",
+                            "title": "F. Aceite PDF",
+                            # "description": "row-description-content"
+                        },
+                        {
+                            "id": "aceite-identifier2",
+                            "title": "F. Aceite Web",
+                            # "description": "row-description-content"
+                        }
+                    ]
+                },
+                
             ]
         }
     }
@@ -229,6 +347,30 @@ def Image_Message(number):
         }
     })
     return data
+def catalgoWSP_Message(number):
+    data = json.dumps(
+        {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": number,
+            "type": "interactive",
+            "interactive": {
+                "type": "catalog_message",
+                "body": {
+                    "text": "Hello! Thanks for your interest. Ordering is easy. Just visit our catalog and add items to purchase."
+                },
+                "action": {
+                    "name": "catalog_message",
+                    "parameters": {
+                        "thumbnail_product_retailer_id": "svtr266tw9"
+                    }
+                },
+                "footer": {
+                    "text": "Best grocery deals on WhatsApp!"
+                }
+            }
+        }
+    )
 def text_Message(number, text):
     data = json.dumps({
         "messaging_product": "whatsapp",
@@ -243,12 +385,10 @@ def text_Message(number, text):
 async def enviar_mensaje_usuario(list_for):
     for item in list_for:
         await enviar_Mensaje_whatsapp(item)
-def mostrar_menu_principal(number, messageId):
-    body = "Hola!, Bienvenido a SoporteSF. Navega por nuestras opciones"
-    footer = "Equipo SF"
-    options  = ["📟 Enviar PDF", "🔎 visitar web", "🔄 actualizar ticket"]
+def mostrar_menu(number, messageId, body, footer, options, sed):
+    
     replyButton_Data = buttonReply_Message(
-        number, options, body, footer, "sed1", messageId)
+        number, options, body, footer, "sed"+sed, messageId)
     # list_for.append(replyButton_Data)
     return replyButton_Data
 
@@ -259,27 +399,69 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
     list_for = []
 
     if text in "hola":
-        data = mostrar_menu_principal(number, messageId)
+        body = "Hola!, Bienvenido a SoporteSF. Navega por nuestras opciones"
+        footer = "Equipo SF"
+        options  = ["Catalogo", "Información", "Inicia tu Negocio"]
+        data = mostrar_menu(number, messageId, body, footer, options, sed="1")
         list_for.append(data)
+    #CATALOGO
+    elif text in "catalogo":
+        body = "Buena elección para revisar nuestros productos, te dejo aquí unas opciones"
+        footer = "Productos SF"
+        options  = ["Descargar PDF", "Lista de Productos", "Catalogo WSP"]
+        data = mostrar_menu(number, messageId, body, footer, options, sed="2")
+        list_for.append(data)
+    elif text in "descargar pdf":
+        data = document_Message(number, str(sett.doc_pdf), "PDF de nuestros filtros", "Filtros - SF")
+        list_for.append(data)
+    elif text in "lista de productos":
+        data = listaDeOpciones_Message(number)
+        list_for.append(data)    
+    
+    #Información
+    elif text in "información":
+        body = "Quieres saber más de nosotros?, te dejo aquí unas opciones"
+        footer = "Información SF"
+        options  = ["Ubicación?", "Redes Sociales", "Tienen pagina web?"]
+        data = mostrar_menu(number, messageId, body, footer, options, sed="2")
+        list_for.append(data)
+    elif text in "redes sociales":
+        data = ButtonImage_Message(number, 
+                                   body="Te presento nuestras redes sociales, no olvides seguirnos para enterarte de ofertas y promociones del día", 
+                                   footer="SF | Redes Sociales - FIX", 
+                                   options=[])
+        list_for.append(data)
+    elif text in "ubicación?":
+        data = location_Message(number, messageId)
+        list_for.append(data)
+        
+    elif text in "tienen pagina web?":
+        data = textUrl_Message(number)
+        list_for.append(data)
+    
+    #Inicia tu negocio
+    elif text in "inicia tu negocio":
+        body = "Emprende junto a nostros! 🤟, te dejo aquí unas opciones"
+        footer = "Emprendiendo con SF"
+        options  = ["Contactar vendedor", "Tu primer negocio", "Consejos Utiles"]
+        data = mostrar_menu(number, messageId, body, footer, options, sed="3")
+        list_for.append(data) 
+    elif text in "contactar vendedor":
+        data = contact_Message(number)
+        list_for.append(data)       
+        
+        
     elif text in "ok":
         data = text_Message(number, "Gracias por contactarse con nosotros")
         list_for.append(data)
         
-    elif text in "enviar pdf":
-        data = document_Message(number, str(sett.doc_pdf), "PDF de nuestros filtros", "Filtros - SF")
-        list_for.append(data)
     elif text in "como es el local?":
         data = Image_Message(number)
         list_for.append(data)
-    elif text in "visitar web":
-        data = textUrl_Message(number)
-        list_for.append(data)
-    elif text in "lista imagenes":
-        data = listImage_Message(number)
-        list_for.append(data)
-    elif text in "donde estan ubicados?":
-        data = location_Message(number, messageId)
-        list_for.append(data)
+
+
+    
+
     else:
             body = "Hola. ¿Quieres que te ayude con alguna de estas opciones?"
             footer = "Equipo SF"

@@ -32,6 +32,7 @@ async def verify_token(request: Request):
 async def recibir_mensaje(request:Request):
     try:
         body = await request.json()
+        print(body)
         entry = body['entry'][0]
         changes = entry['changes'][0]
         value = changes['value']
