@@ -32,7 +32,6 @@ async def verify_token(request: Request):
 async def recibir_mensaje(request:Request):
     try:
         body = await request.json()
-        print(body)
         entry = body['entry'][0]
         changes = entry['changes'][0]
         value = changes['value']
@@ -47,12 +46,10 @@ async def recibir_mensaje(request:Request):
 
         await services.administrar_chatbot(text, number, messageId, name, timestamp)
         
-        
         return 'EVENT_RECEIVED'
       
     except Exception as e:
       return HTTPException(status_code=500, detail=str(e))
-
 
 # if __name__ == "__main__":
 #     uvicorn.run(app, host="0.0.0.0", port=94)
