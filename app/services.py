@@ -20,12 +20,25 @@ async def obtener_Mensaje_whatsapp(message):
         text = message['interactive']['list_reply']['title']
     elif typeMessage == 'interactive' and message['interactive']['type'] == 'button_reply':
         text = message['interactive']['button_reply']['title']
+    elif typeMessage == 'order':
+        # Llama a una función que procesa y resume la orden, esta función se debe definir
+        text = message['order']
 
     else:
         text = 'mensaje no reconocido'
 
     return text
 
+async def sumar_total_pedido(product_items):
+    total = 0
+    for item in product_items:
+        total += item['item_price'] * item['quantity']
+    return total
+
+
+async def procesar_orden(order):
+    total_pedido = await sumar_total_pedido(order['product_items'])
+    return f'Orden recibida. Total del pedido: {total_pedido} {order["product_items"][0]["currency"]}'
 
 async def enviar_Mensaje_whatsapp(data):
     try:
@@ -46,9 +59,6 @@ async def enviar_Mensaje_whatsapp(data):
             print('error al enviar mensaje', response.status_code)
     except Exception as e:
         return str(e), 403
-
-
-
 def buttonReply_Message(number, options, body, footer, sedd, messageId):
     buttons = []
 
@@ -82,6 +92,20 @@ def buttonReply_Message(number, options, body, footer, sedd, messageId):
     )
     return data 
 def ButtonImage_Message(number, body, footer, options):
+    id_base = "unique-postback-id-"
+    accion = {
+    "buttons": []
+    }
+# Iterar sobre la lista de títulos de botones y crear botones correspondientes
+    for i, titulo in enumerate(options, start=0):
+        boton = {
+            "type": "reply",
+            "reply": {
+                "id": f"{id_base}{i}",
+                "title": titulo
+            }
+        }
+        accion["buttons"].append(boton)
     
     data = json.dumps({
         "messaging_product": "whatsapp",
@@ -102,31 +126,7 @@ def ButtonImage_Message(number, body, footer, options):
             "footer": {
                 "text": footer
             },
-            "action": {
-                "buttons": [
-                {
-                    "type": "reply",
-                    "reply": {
-                        "id": "unique-postback-id-2",
-                        "title": "Instagram"
-                    }
-                },
-                {
-                    "type": "reply",
-                    "reply": {
-                        "id": "unique-postback-id-1",
-                        "title": "Facebook"
-                    }
-                },
-                {
-                    "type": "reply",
-                    "reply": {
-                        "id": "unique-postback-id-3",
-                        "title": "TikTok"
-                    }
-                }
-            ]
-            }
+            "action": accion
         }
     })
     return data
@@ -385,88 +385,95 @@ def text_Message(number, text):
 async def enviar_mensaje_usuario(list_for):
     for item in list_for:
         await enviar_Mensaje_whatsapp(item)
-def mostrar_menu(number, messageId, body, footer, options, sed):
-    
+def mostrar_menu(number, messageId, body, footer, options, sed):    
     replyButton_Data = buttonReply_Message(
         number, options, body, footer, "sed"+sed, messageId)
     # list_for.append(replyButton_Data)
     return replyButton_Data
-
 async def administrar_chatbot(text, number, messageId, name, timestamp):
-    text = text.lower()
-    print(f"Mensaje del usuario {name}:", text)
-    lista_privada = ["hola", "admin"]
+    print(type(text))
     list_for = []
-
-    if text in "hola":
-        body = "Hola!, Bienvenido a SoporteSF. Navega por nuestras opciones"
-        footer = "Equipo SF"
-        options  = ["Catalogo", "Información", "Inicia tu Negocio"]
-        data = mostrar_menu(number, messageId, body, footer, options, sed="1")
-        list_for.append(data)
-    #CATALOGO
-    elif text in "catalogo":
-        body = "Buena elección para revisar nuestros productos, te dejo aquí unas opciones"
-        footer = "Productos SF"
-        options  = ["Descargar PDF", "Lista de Productos", "Catalogo WSP"]
-        data = mostrar_menu(number, messageId, body, footer, options, sed="2")
-        list_for.append(data)
-    elif text in "descargar pdf":
-        data = document_Message(number, str(sett.doc_pdf), "PDF de nuestros filtros", "Filtros - SF")
-        list_for.append(data)
-    elif text in "lista de productos":
-        data = listaDeOpciones_Message(number)
-        list_for.append(data)    
-    
-    #Información
-    elif text in "información":
-        body = "Quieres saber más de nosotros?, te dejo aquí unas opciones"
-        footer = "Información SF"
-        options  = ["Ubicación?", "Redes Sociales", "Tienen pagina web?"]
-        data = mostrar_menu(number, messageId, body, footer, options, sed="2")
-        list_for.append(data)
-    elif text in "redes sociales":
-        data = ButtonImage_Message(number, 
-                                   body="Te presento nuestras redes sociales, no olvides seguirnos para enterarte de ofertas y promociones del día", 
-                                   footer="SF | Redes Sociales - FIX", 
-                                   options=[])
-        list_for.append(data)
-    elif text in "ubicación?":
-        data = location_Message(number, messageId)
+    lista_privada = ["hola", "admin"]
+    if type(text) == dict:
+        data_text = await procesar_orden(text)
+        data = text_Message(number, data_text)
+        data_img = ButtonImage_Message(number, 
+                                    body="Aqui te envio los datos de transferencia", 
+                                    footer="SF | Gracias por preferirnos ♥", 
+                                    options=["Transferencia", "Pago en Efectivo"])
+        list_for.append(data_img)
         list_for.append(data)
         
-    elif text in "tienen pagina web?":
-        data = textUrl_Message(number)
-        list_for.append(data)
-    
-    #Inicia tu negocio
-    elif text in "inicia tu negocio":
-        body = "Emprende junto a nostros! 🤟, te dejo aquí unas opciones"
-        footer = "Emprendiendo con SF"
-        options  = ["Contactar vendedor", "Tu primer negocio", "Consejos Utiles"]
-        data = mostrar_menu(number, messageId, body, footer, options, sed="3")
-        list_for.append(data) 
-    elif text in "contactar vendedor":
-        data = contact_Message(number)
-        list_for.append(data)       
-        
-        
-    elif text in "ok":
-        data = text_Message(number, "Gracias por contactarse con nosotros")
-        list_for.append(data)
-        
-    elif text in "como es el local?":
-        data = Image_Message(number)
-        list_for.append(data)
-
-
-    
-
     else:
-            body = "Hola. ¿Quieres que te ayude con alguna de estas opciones?"
+        text = text.lower()
+        print(f"Mensaje del usuario {name}:", text)
+        
+        if text in "hola":
+            body = "Hola!, Bienvenido a SoporteSF. Navega por nuestras opciones"
             footer = "Equipo SF"
-            options = ["✅ productos", "📅 agendar cita"]
-            list_for.append(body)
-            replyButtonData = buttonReply_Message(number, options, body, footer, "sed7", messageId)
-            list_for.append(replyButtonData)
+            options  = ["Catalogo", "Información", "Inicia tu Negocio"]
+            data = mostrar_menu(number, messageId, body, footer, options, sed="1")
+            list_for.append(data)
+            
+        #CATALOGO
+        elif text in "catalogo":
+            body = "Buena elección para revisar nuestros productos, te dejo aquí unas opciones"
+            footer = "Productos SF"
+            options  = ["Descargar PDF", "Lista de Productos", "Catalogo WSP"]
+            data = mostrar_menu(number, messageId, body, footer, options, sed="2")
+            list_for.append(data)
+        elif text in "descargar pdf":
+            data = document_Message(number, str(sett.doc_pdf), "PDF de nuestros filtros", "Filtros - SF")
+            list_for.append(data)
+        elif text in "lista de productos":
+            data = listaDeOpciones_Message(number)
+            list_for.append(data)    
+        
+        #Información
+        elif text in "información":
+            body = "Quieres saber más de nosotros?, te dejo aquí unas opciones"
+            footer = "Información SF"
+            options  = ["Ubicación?", "Redes Sociales", "Tienen pagina web?"]
+            data = mostrar_menu(number, messageId, body, footer, options, sed="2")
+            list_for.append(data)
+        elif text in "redes sociales":
+            data = ButtonImage_Message(number, 
+                                    body="Te presento nuestras redes sociales, no olvides seguirnos para enterarte de ofertas y promociones del día", 
+                                    footer="SF | Redes Sociales - FIX", 
+                                    options=[])
+            list_for.append(data)
+        elif text in "ubicación?":
+            data = location_Message(number, messageId)
+            list_for.append(data)
+            
+        elif text in "tienen pagina web?":
+            data = textUrl_Message(number)
+            list_for.append(data)
+        
+        #Inicia tu negocio
+        elif text in "inicia tu negocio":
+            body = "Emprende junto a nostros! 🤟, te dejo aquí unas opciones"
+            footer = "Emprendiendo con SF"
+            options  = ["Contactar vendedor", "Tu primer negocio", "Consejos Utiles"]
+            data = mostrar_menu(number, messageId, body, footer, options, sed="3")
+            list_for.append(data) 
+        elif text in "contactar vendedor":
+            data = contact_Message(number)
+            list_for.append(data)       
+            
+        elif text in "ok":
+            data = text_Message(number, "Gracias por contactarse con nosotros")
+            list_for.append(data)
+            
+        elif text in "como es el local?":
+            data = Image_Message(number)
+            list_for.append(data)
+
+        else:
+                body = "Hola. ¿Quieres que te ayude con alguna de estas opciones?"
+                footer = "Equipo SF"
+                options = ["✅ productos", "📅 agendar cita"]
+                list_for.append(body)
+                replyButtonData = buttonReply_Message(number, options, body, footer, "sed7", messageId)
+                list_for.append(replyButtonData)
     return await enviar_mensaje_usuario(list_for)
