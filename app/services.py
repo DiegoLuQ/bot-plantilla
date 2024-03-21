@@ -445,7 +445,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
                 sett.doc_pdf), "PDF de nuestros filtros", "Filtros - SF")
             list_for.append(data)
  
-        elif text in "Catalogo WSP":
+        elif text in "catalogo wsp":
             data = catalgoWSP_Message(number)
             list_for.append(data)
             
