@@ -41,7 +41,7 @@ async def recibir_mensaje(request:Request):
         contacts = value['contacts'][0]
         name = contacts['profile']['name']
         text = await services.obtener_Mensaje_whatsapp(message)
-        # print(body)
+        print(body)
         timestamp = int(message['timestamp'])
 
         await services.administrar_chatbot(text, number, messageId, name, timestamp)

@@ -321,6 +321,31 @@ def Image_Message(number):
     return data
 
 
+def catalogo_Message():
+    data = json.dumps({
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": "56961227637",
+        "type": "interactive",
+        "interactive": {
+            "type": "catalog_message",
+            "body": {
+                "text": "Descubre nuestra gama de filtros para vehículos 🚗: calidad y rendimiento para mantener tu motor en óptimas condiciones. ¡Echa un vistazo ahora!"
+            },
+            "action": {
+                "name": "catalog_message",
+                "parameters": {
+                    "thumbnail_product_retailer_id": "svtr266tw9"
+                }
+            },
+            "footer": {
+                "text": "Best grocery deals on WhatsApp!"
+            }
+        }
+    })
+    return data
+
+
 def catalgoWSP_Message(number):
     data = json.dumps(
         {
@@ -353,11 +378,14 @@ def preparar_mensajes(numero, mensajes):
     return [text_Message(numero, mensaje) for mensaje in mensajes]
 
 
-def text_Message(number, text):
+def text_Message(number, text, messageId = None):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
         "to": number,
+        "context": {
+        "message_id": messageId
+    },
         "type": "text",
         "text": {
             "body": text
@@ -398,8 +426,8 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
         text = text.lower()
         print(f"Mensaje del usuario {name}:", text)
 
-        if text in "hola":
-            body = "Hola!, Bienvenido a SoporteSF. Navega por nuestras opciones"
+        if text in ["hola", "buenos dias", "buenas noches", "buenas tardes", "ola", "hello"]:
+            body = "Hola, ¡bienvenido a SF! 🌟 Soy tu asistente virtual Jack 24/7, listo para resolver tus dudas. Navega por nuestro menú para explorar productos, conocer más sobre SF 📊 y descubrir cómo iniciar tu negocio con nosotros 🚀."
             footer = "Equipo SF"
             options = ["Catalogo", "Información", "Tu Negocio"]
             data = mostrar_menu(number, messageId, body,
@@ -499,7 +527,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             body = "Emprende junto a nostros! 🤟, te dejo aquí unas opciones"
             footer = "Emprendiendo con SF"
             options = ["Contactar vendedor",
-                       "Tu primer negocio", 
+                       "Tu primer negocio",
                        "Consejos Utiles"]
             data = mostrar_menu(number, messageId, body,
                                 footer, options, sed="3")
@@ -507,8 +535,8 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
         elif text in "contactar vendedor":
             data = contact_Message(number)
             list_for.append(data)
-            
-        ## TU PRIMER NEGOCIO
+
+        # TU PRIMER NEGOCIO
         elif text in "tu primer negocio":
             data_img = ButtonImage_Message(number,
                                            body="Tu primer negocio junto a SF | Confianza y Calidad",
@@ -553,15 +581,37 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
                 }
             ]
             data = await listaDeOpciones_Message(number, header_text="Presupuestos PREDETERMINADOS 🤟",
-                                           body_text="Selecciona el rango de compra 🛒 que mejor se ajusta a tus necesidades y te facilitaremos un PDF 📄 detallado para tu consulta. Este documento está diseñado con filtros específicos 🔍 para adaptarse a las particularidades de tu negocio 🏭, asegurando que encuentres exactamente lo que buscas de manera eficiente 💼.",
-                                           footer_text="SF | Calidad y Confianza", button_text="Ver Presupuestos 😎", opciones=lista_opciones)
+                                                 body_text="Selecciona el rango de compra 🛒 que mejor se ajusta a tus necesidades y te facilitaremos un PDF 📄 detallado para tu consulta. Este documento está diseñado con filtros específicos 🔍 para adaptarse a las particularidades de tu negocio 🏭, asegurando que encuentres exactamente lo que buscas de manera eficiente 💼.",
+                                                 footer_text="SF | Calidad y Confianza", button_text="Ver Presupuestos 😎", opciones=lista_opciones)
             list_for.append(data)
 
         elif text in "CLP 100.000 - 300.000":
-            pass
+            data = text_Message(number, "Descubre cómo tu negocio puede beneficiarse de nuestra selección de filtros con precios especiales al por mayor, ideales para pequeñas empresas o talleres que están comenzando. Al elegir esta opción, recibirás un PDF detallado con una propuesta de precios diseñada para optimizar tu inversión inicial.", messageId)
+            list_for.append(data)
+            
+        elif text in "CLP 300.001 - 500.000":
+            data = text_Message(number, "Para empresas en crecimiento, ofrecemos un rango de precios competitivos que se ajusta a tus necesidades de expansión. Seleccionando este nivel, te enviaremos un PDF con una estructura de precios al por mayor que te permitirá escalar tu negocio manteniendo un equilibrio entre calidad y coste.", messageId)
+            list_for.append(data)
+            
+        elif text in "CLP 500.001 - 700.000":
+            data = text_Message(number, "Empresas establecidas encontrarán en este rango una oportunidad para fortalecer su cadena de suministro con nuestros filtros de alto rendimiento a precios preferenciales. El PDF que recibirás como parte de esta opción refleja una estrategia de precios pensada para socios comprometidos con la calidad y la eficiencia.", messageId)
+            list_for.append(data)
         
+        elif text in "CLP 700.001 - XXX.XXX":
+            data = text_Message(number, "Dirigido a líderes de la industria y grandes flotas, este rango ofrece el mejor valor con precios exclusivos al por mayor para pedidos de gran volumen. Al optar por esta categoría, el PDF proporcionado incluirá una oferta personalizada que reconoce y recompensa tu inversión y fidelidad a largo plazo con SF.", messageId)
+            list_for.append(data)
+
+        # OTROS MENSAJES
+        elif text  in "gracias":
+            data = text_Message(number, "Estamos para ayudarte 🤓", messageId)
+            list_for.append(data)
+            
+        elif text  in ["chao", "hasta luego"]:
+            data = text_Message(number, "Estamos para ayudarte 🤓", messageId)
+            list_for.append(data)
+                
         elif text in "ok":
-            data = text_Message(number, "Gracias por contactarse con nosotros")
+            data = text_Message(number, "😎", messageId)
             list_for.append(data)
 
         elif text in "como es el local?":
