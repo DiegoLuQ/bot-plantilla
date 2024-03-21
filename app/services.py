@@ -370,14 +370,13 @@ def catalgoWSP_Message(number):
             }
         }
     )
+    return data
 
 # Enviar varios mensajes
 
 
 def preparar_mensajes(numero, mensajes):
     return [text_Message(numero, mensaje) for mensaje in mensajes]
-
-
 def text_Message(number, text, messageId = None):
     data = json.dumps({
         "messaging_product": "whatsapp",
@@ -414,11 +413,11 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
     lista_privada = ["hola", "admin"]
     if type(text) == dict:
         data_text = await procesar_orden(text)
-        data = text_Message(number, data_text)
+        data = text_Message(number, data_text, messageId)
         data_img = ButtonImage_Message(number,
                                        body="Aqui te envio los datos de transferencia",
                                        footer="SF | Gracias por preferirnos ♥",
-                                       options=["Transferencia", "Pago en Efectivo"])
+                                       options=["Transferencia", "Pago en Efectivo"], url_img="https://i.postimg.cc/PJPRZJBh/e35f9d3b-f59b-44ed-91e2-e6742799baad.png")
         list_for.append(data_img)
         list_for.append(data)
 
@@ -433,7 +432,6 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             data = mostrar_menu(number, messageId, body,
                                 footer, options, sed="1")
             list_for.append(data)
-
         # CATALOGO
         elif text in "catalogo":
             body = "Buena elección para revisar nuestros productos, te dejo aquí unas opciones"
@@ -446,6 +444,11 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             data = document_Message(number, str(
                 sett.doc_pdf), "PDF de nuestros filtros", "Filtros - SF")
             list_for.append(data)
+ 
+        elif text in "Catalogo WSP":
+            data = catalgoWSP_Message(number)
+            list_for.append(data)
+            
         elif text in "lista de productos":
             lista_opciones = [
                 {
