@@ -42,7 +42,7 @@ async def procesar_orden(order):
     total_pedido = await sumar_total_pedido(order['product_items'])
     return f'Orden recibida. Total del pedido: {total_pedido} {order["product_items"][0]["currency"]}'
 
-
+#enviamos el mensaje en una data a la api de wsp
 async def enviar_Mensaje_whatsapp(data):
     try:
         # print(data)
@@ -411,6 +411,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
     print(type(text))
     list_for = []
     lista_privada = ["hola", "admin"]
+    
     if type(text) == dict:
         data_text = await procesar_orden(text)
         data = text_Message(number, data_text, messageId)
@@ -425,31 +426,34 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
         text = text.lower()
         print(f"Mensaje del usuario {name}:", text)
 
-        if text in ["hola", "buenos dias", "buenas noches", "buenas tardes", "ola", "hello"]:
-            body = "Hola, ¡bienvenido a SF! 🌟 Soy tu asistente virtual Jack 24/7, listo para resolver tus dudas. Navega por nuestro menú para explorar productos, conocer más sobre SF 📊 y descubrir cómo iniciar tu negocio con nosotros 🚀."
+        if text in lista_privada:
+            body = "Hola, ¡bienvenido a SF! 🌟❤️ Soy tu asistente virtual Jack 24/7. Navega por nuestro menú para explorar productos, conocer más sobre SF 📊 y descubrir cómo iniciar tu negocio con nosotros 🚀."
             footer = "Equipo SF"
-            options = ["Catalogo", "Información", "Tu Negocio"]
+            options = ["Catalogo", "Información", "Ventas"]
             data = mostrar_menu(number, messageId, body,
                                 footer, options, sed="1")
             list_for.append(data)
+            create_at = datetime.fromtimestamp(timestamp)
+            
         # CATALOGO
-        elif text in "catalogo":
+        elif "catalogo" in text:
             body = "Buena elección para revisar nuestros productos, te dejo aquí unas opciones"
             footer = "Productos SF"
-            options = ["Descargar PDF", "Lista de Productos", "Catalogo WSP"]
+            options = ["🗒️ Descargar PDF", "🤟 Lista de Productos", "😎 Catalogo WSP"]
             data = mostrar_menu(number, messageId, body,
                                 footer, options, sed="2")
             list_for.append(data)
-        elif text in "descargar pdf":
+            
+        elif "descargar pdf" in text:
             data = document_Message(number, str(
                 sett.doc_pdf), "PDF de nuestros filtros", "Filtros - SF")
             list_for.append(data)
  
-        elif text in "catalogo wsp":
+        elif "catalogo wsp" in text:
             data = catalgoWSP_Message(number)
             list_for.append(data)
             
-        elif text in "lista de productos":
+        elif "lista de productos" in text:
             lista_opciones = [
                 {
                     "title": "Filtro de aire 🍃",
@@ -503,6 +507,8 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
                                            header_text="Listado de Filtros", footer_text="SF | Calidad y Confianza", button_text="Ver ☑️", opciones=lista_opciones)
             list_for.append(data)
 
+        # CREAR LOS ENLACES QUE LLEVEN AL USUARIO A BUSCAR LOS FILTROS www.santiagofitlros.cl/productos/filtros/filtros-de-aire
+        
         # Información
         elif text in "información":
             body = "Quieres saber más de nosotros?, te dejo aquí unas opciones"
@@ -511,12 +517,14 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             data = mostrar_menu(number, messageId, body,
                                 footer, options, sed="2")
             list_for.append(data)
+            
         elif text in "redes sociales":
             data = ButtonImage_Message(number,
                                        body="Te presento nuestras redes sociales, no olvides seguirnos para enterarte de ofertas y promociones del día",
                                        footer="SF | Redes Sociales - FIX",
                                        options=["Instagram", "Facebook", "TikTok"], url_img="https://dinahosting.com/blog/upload/2022/07/tamanos-imagenes-redes-sociales-2024_dinahosting.png")
             list_for.append(data)
+            
         elif text in "ubicación?":
             data = location_Message(number, messageId)
             list_for.append(data)
@@ -526,7 +534,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             list_for.append(data)
 
         # TU NEGOCIO
-        elif text in "tu negocio":
+        elif text in "ventas":
             body = "Emprende junto a nostros! 🤟, te dejo aquí unas opciones"
             footer = "Emprendiendo con SF"
             options = ["Contactar vendedor",
@@ -535,6 +543,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             data = mostrar_menu(number, messageId, body,
                                 footer, options, sed="3")
             list_for.append(data)
+            
         elif text in "contactar vendedor":
             data = contact_Message(number)
             list_for.append(data)
@@ -551,6 +560,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
 
         elif text in "soy cliente":
             pass
+        
         elif text in "primera compra":
             mensajes = ["¡Estamos encantados de darte la bienvenida a nuestra comunidad de clientes! Es un placer tenerte con nosotros en tu primera compra. 😊",
                         "Queremos que sepas que ofrecemos una diversidad de opciones para asegurarnos de que encuentres exactamente lo que necesitas, adaptándonos a todo tipo de presupuestos. Ya sea que busques algo económico o estés buscando invertir en productos de calidad, tenemos lo justo para ti."
@@ -622,9 +632,9 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             list_for.append(data)
 
         else:
-            body = "Hola. ¿Quieres que te ayude con alguna de estas opciones?"
-            footer = "Equipo SF"
-            options = ["✅ productos", "📅 agendar cita"]
+            body = "No tengo ese comando en mi sistema, dime como puedo ayudarte?"
+            footer = "Equipo SF | santiagofiltros.cl"
+            options = ["Catalogo", "Información", "Tu Negocio"]
             list_for.append(body)
             replyButtonData = buttonReply_Message(
                 number, options, body, footer, "sed7", messageId)
