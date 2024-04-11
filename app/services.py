@@ -6,6 +6,44 @@ from config import settings as sett
 from datetime import datetime
 
 
+async def guardar_datos_db(data):
+    try:
+        # print(data)
+
+        headers = {'Content-Type': 'application/json'}
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post("http://127.0.0.1:8001/v1/user_wsp/register_user", headers=headers, data=data)
+
+        if response.status_code == 200:
+            return 'mensaje guardado', 200
+        else:
+            print('error al guardar mensaje', response.status_code)
+    except Exception as e:
+        return str(e), 403
+
+
+async def enviar_Mensaje_whatsapp(data):
+    try:
+        # print(data)
+        whatsapp_token = sett.wsp_token
+        whatsapp_url = sett.wsp_url
+        headers = {'Content-Type': 'application/json',
+                   'Authorization': 'Bearer ' + whatsapp_token}
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(whatsapp_url, headers=headers, data=data)
+        print(response.status_code)
+        if response.status_code == 200:
+            print('mensaje guardado', 200)
+            return 'mensaje guardado', 200
+        else:
+            print("mensaje no enviado", response.status_code)
+            return 'error al enviar mensaje', response.status_code
+    except Exception as e:
+        return str(e), 403
+
+
 async def obtener_Mensaje_whatsapp(message):
     if 'type' not in message:
         text = 'Mensaje no reconocido'
@@ -41,27 +79,6 @@ async def sumar_total_pedido(product_items):
 async def procesar_orden(order):
     total_pedido = await sumar_total_pedido(order['product_items'])
     return f'Orden recibida. Total del pedido: {total_pedido} {order["product_items"][0]["currency"]}'
-
-#enviamos el mensaje en una data a la api de wsp
-async def enviar_Mensaje_whatsapp(data):
-    try:
-        # print(data)
-        whatsapp_token = sett.wsp_token
-        whatsapp_url = sett.wsp_url
-
-        headers = {'Content-Type': 'application/json',
-                   'Authorization': 'Bearer ' + whatsapp_token}
-
-        async with httpx.AsyncClient() as client:
-            response = await client.post(whatsapp_url, headers=headers, data=data)
-
-        if response.status_code == 200:
-            return 'mensaje enviado', 200
-        else:
-            print("mensaje no enviado", response.status_code)
-            print('error al enviar mensaje', response.status_code)
-    except Exception as e:
-        return str(e), 403
 
 
 def buttonReply_Message(number, options, body, footer, sedd, messageId):
@@ -309,6 +326,30 @@ async def listaDeOpciones_Message(number, body_text, header_text, footer_text, b
     return data
 
 
+async def ClientLocation_Message(number):
+    try:
+        data = json.dumps({
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": number,
+            "type": "interactive",
+            "interactive": {
+                "type": "location_request_message",
+                "body": {
+                    "type": "text",
+                    "text": "Favor enviar ubicación para ir a dejar el pedido, gracias."
+                },
+                "action": {
+                    "name": "send_location"
+                }
+            }
+        })
+        return data
+      
+    except Exception as e:
+      print(e)
+
+
 def Image_Message(number):
     data = json.dumps({
         "messaging_product": "whatsapp",
@@ -377,14 +418,16 @@ def catalgoWSP_Message(number):
 
 def preparar_mensajes(numero, mensajes):
     return [text_Message(numero, mensaje) for mensaje in mensajes]
-def text_Message(number, text, messageId = None):
+
+
+def text_Message(number, text, messageId=None):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
         "to": number,
         "context": {
-        "message_id": messageId
-    },
+            "message_id": messageId
+        },
         "type": "text",
         "text": {
             "body": text
@@ -393,66 +436,129 @@ def text_Message(number, text, messageId = None):
     return data
 
 
+def sticker_Message(number, sticker_id):
+    data = json.dumps(
+        {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": number,
+            "type": "sticker",
+            "sticker": {
+                "id": sticker_id
+            }
+        }
+    )
+    return data
+    # {'object': 'whatsapp_business_account', 'entry': [{'id': '131989103328203',
+    # 'changes': [{'value': {'messaging_product': 'whatsapp',
+    # 'metadata': {'display_phone_number': '56934888609', 'phone_number_id': '130513470143872'},
+    # 'contacts': [{'profile': {'name': 'JD'}, 'wa_id': '56961227637'}],
+    # 'messages': [{'from': '56961227637', 'id': 'wamid.HBgLNTY5NjEyMjc2MzcVAgASGBQzQTU1QTc1REZCMkM0RTlGREE5NAA=',
+    # 'timestamp': '1711930371', 'type': 'sticker',
+    # 'sticker': {'mime_type': 'image/webp',
+    # 'sha256': 'uwXVoi2i4wLtzkMQAP7ySI3p7MNqzU+PM/RWn1GBwO0=',
+    # 'id': '381731608015965',
+    # 'animated': False}
+    # }]}, 'field': 'messages'}]}]}
+
+
+def get_media_id(media_name, media_type):
+    media_id = ""
+    if media_type == "sticker":
+        media_id = sett.stickers.get(media_name, None)
+    # elif media_type == "image":
+    #    media_id = sett.images.get(media_name, None)
+    # elif media_type == "video":
+    #    media_id = sett.videos.get(media_name, None)
+    # elif media_type == "audio":
+    #    media_id = sett.audio.get(media_name, None)
+    return media_id
+
+
 def mostrar_menu(number, messageId, body, footer, options, sed):
     replyButton_Data = buttonReply_Message(
         number, options, body, footer, "sed"+sed, messageId)
     # list_for.append(replyButton_Data)
     return replyButton_Data
-    return data
 
 
 async def enviar_mensaje_usuario(list_for):
     for item in list_for:
         await enviar_Mensaje_whatsapp(item)
-        await sleep(3)
+        await sleep(1)
+
+
+def markRead_Message(messageId):
+    data = json.dumps(
+        {
+            "messaging_product": "whatsapp",
+            "status": "read",
+            "message_id":  messageId
+        }
+    )
+    return data
 
 
 async def administrar_chatbot(text, number, messageId, name, timestamp):
     print(type(text))
     list_for = []
     lista_privada = ["hola", "admin"]
-    
+
+    def welcome_message():
+        body = "Hola, ¡bienvenido a SF! ❤️ Soy tu asistente virtual Jack 24/7. Navega por nuestro menú, conoce más sobre SF 📊 y descubre cómo iniciar tu negocio con nosotros 🚀."
+        footer = "Equipo SF"
+        options = ["Catalogo", "Información", "Ventas"]
+        return mostrar_menu(number, messageId, body, footer, options, sed="1")
+
     if type(text) == dict:
         data_text = await procesar_orden(text)
         data = text_Message(number, data_text, messageId)
         data_img = ButtonImage_Message(number,
                                        body="Aqui te envio los datos de transferencia",
                                        footer="SF | Gracias por preferirnos ♥",
-                                       options=["Transferencia", "Pago en Efectivo"], url_img="https://i.postimg.cc/PJPRZJBh/e35f9d3b-f59b-44ed-91e2-e6742799baad.png")
+                                       options=["Transferencia", "Pago en Efectivo", "3er Opcion"], url_img="https://i.postimg.cc/PJPRZJBh/e35f9d3b-f59b-44ed-91e2-e6742799baad.png")
         list_for.append(data_img)
         list_for.append(data)
 
     else:
         text = text.lower()
-        print(f"Mensaje del usuario {name}:", text)
+        payload = json.dumps({
+            "wsp_name": name,
+            "wsp_number": number,
+            "wsp_timestamp": timestamp,
+            "wsp_text": text,
+            "wsp_messageid": messageId
+        })
 
-        if text in lista_privada:
-            body = "Hola, ¡bienvenido a SF! 🌟❤️ Soy tu asistente virtual Jack 24/7. Navega por nuestro menú para explorar productos, conocer más sobre SF 📊 y descubrir cómo iniciar tu negocio con nosotros 🚀."
-            footer = "Equipo SF"
-            options = ["Catalogo", "Información", "Ventas"]
-            data = mostrar_menu(number, messageId, body,
-                                footer, options, sed="1")
-            list_for.append(data)
-            create_at = datetime.fromtimestamp(timestamp)
-            
+        print(f"Mensaje del usuario {name}:", text)
+        if text in "hola":
+            # await guardar_datos_db(payload)
+            # sticker = sticker = sticker_Message(number, get_media_id('perro_traje', 'sticker'))
+            # list_for.append(sticker)
+            list_for.append(welcome_message())
+
         # CATALOGO
         elif "catalogo" in text:
             body = "Buena elección para revisar nuestros productos, te dejo aquí unas opciones"
             footer = "Productos SF"
-            options = ["🗒️ Descargar PDF", "🤟 Lista de Productos", "😎 Catalogo WSP"]
+            options = ["🗒️ Descargar PDF",
+                       "🤟 Lista de Productos", "😎 Catalogo WSP"]
             data = mostrar_menu(number, messageId, body,
                                 footer, options, sed="2")
             list_for.append(data)
-            
+
         elif "descargar pdf" in text:
             data = document_Message(number, str(
                 sett.doc_pdf), "PDF de nuestros filtros", "Filtros - SF")
             list_for.append(data)
- 
+
         elif "catalogo wsp" in text:
             data = catalgoWSP_Message(number)
             list_for.append(data)
-            
+        elif "send location" in text:
+            data = await ClientLocation_Message(number)
+            list_for.append(data)
+
         elif "lista de productos" in text:
             lista_opciones = [
                 {
@@ -503,12 +609,12 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
 
             ]
 
-            data = listaDeOpciones_Message(number, body_text="Productos de calidad, dale a tus cliente lo mejor",
-                                           header_text="Listado de Filtros", footer_text="SF | Calidad y Confianza", button_text="Ver ☑️", opciones=lista_opciones)
+            data = await listaDeOpciones_Message(number, body_text="Productos de calidad, dale a tus cliente lo mejor",
+                                                 header_text="Listado de Filtros", footer_text="SF | Calidad y Confianza", button_text="Ver ☑️", opciones=lista_opciones)
             list_for.append(data)
 
         # CREAR LOS ENLACES QUE LLEVEN AL USUARIO A BUSCAR LOS FILTROS www.santiagofitlros.cl/productos/filtros/filtros-de-aire
-        
+
         # Información
         elif text in "información":
             body = "Quieres saber más de nosotros?, te dejo aquí unas opciones"
@@ -517,14 +623,14 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             data = mostrar_menu(number, messageId, body,
                                 footer, options, sed="2")
             list_for.append(data)
-            
+
         elif text in "redes sociales":
             data = ButtonImage_Message(number,
                                        body="Te presento nuestras redes sociales, no olvides seguirnos para enterarte de ofertas y promociones del día",
                                        footer="SF | Redes Sociales - FIX",
                                        options=["Instagram", "Facebook", "TikTok"], url_img="https://dinahosting.com/blog/upload/2022/07/tamanos-imagenes-redes-sociales-2024_dinahosting.png")
             list_for.append(data)
-            
+
         elif text in "ubicación?":
             data = location_Message(number, messageId)
             list_for.append(data)
@@ -543,7 +649,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             data = mostrar_menu(number, messageId, body,
                                 footer, options, sed="3")
             list_for.append(data)
-            
+
         elif text in "contactar vendedor":
             data = contact_Message(number)
             list_for.append(data)
@@ -560,7 +666,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
 
         elif text in "soy cliente":
             pass
-        
+
         elif text in "primera compra":
             mensajes = ["¡Estamos encantados de darte la bienvenida a nuestra comunidad de clientes! Es un placer tenerte con nosotros en tu primera compra. 😊",
                         "Queremos que sepas que ofrecemos una diversidad de opciones para asegurarnos de que encuentres exactamente lo que necesitas, adaptándonos a todo tipo de presupuestos. Ya sea que busques algo económico o estés buscando invertir en productos de calidad, tenemos lo justo para ti."
@@ -601,28 +707,28 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
         elif text in "CLP 100.000 - 300.000":
             data = text_Message(number, "Descubre cómo tu negocio puede beneficiarse de nuestra selección de filtros con precios especiales al por mayor, ideales para pequeñas empresas o talleres que están comenzando. Al elegir esta opción, recibirás un PDF detallado con una propuesta de precios diseñada para optimizar tu inversión inicial.", messageId)
             list_for.append(data)
-            
+
         elif text in "CLP 300.001 - 500.000":
             data = text_Message(number, "Para empresas en crecimiento, ofrecemos un rango de precios competitivos que se ajusta a tus necesidades de expansión. Seleccionando este nivel, te enviaremos un PDF con una estructura de precios al por mayor que te permitirá escalar tu negocio manteniendo un equilibrio entre calidad y coste.", messageId)
             list_for.append(data)
-            
+
         elif text in "CLP 500.001 - 700.000":
             data = text_Message(number, "Empresas establecidas encontrarán en este rango una oportunidad para fortalecer su cadena de suministro con nuestros filtros de alto rendimiento a precios preferenciales. El PDF que recibirás como parte de esta opción refleja una estrategia de precios pensada para socios comprometidos con la calidad y la eficiencia.", messageId)
             list_for.append(data)
-        
+
         elif text in "CLP 700.001 - XXX.XXX":
             data = text_Message(number, "Dirigido a líderes de la industria y grandes flotas, este rango ofrece el mejor valor con precios exclusivos al por mayor para pedidos de gran volumen. Al optar por esta categoría, el PDF proporcionado incluirá una oferta personalizada que reconoce y recompensa tu inversión y fidelidad a largo plazo con SF.", messageId)
             list_for.append(data)
 
         # OTROS MENSAJES
-        elif text  in "gracias":
+        elif text in "gracias":
             data = text_Message(number, "Estamos para ayudarte 🤓", messageId)
             list_for.append(data)
-            
-        elif text  in ["chao", "hasta luego"]:
+
+        elif text in ["chao", "hasta luego"]:
             data = text_Message(number, "Estamos para ayudarte 🤓", messageId)
             list_for.append(data)
-                
+
         elif text in "ok":
             data = text_Message(number, "😎", messageId)
             list_for.append(data)
