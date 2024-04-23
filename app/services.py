@@ -22,7 +22,6 @@ async def guardar_datos_db(data):
     except Exception as e:
         return str(e), 403
 
-
 async def enviar_Mensaje_whatsapp(data):
     try:
         # print(data)
@@ -38,11 +37,10 @@ async def enviar_Mensaje_whatsapp(data):
             print('mensaje guardado', 200)
             return 'mensaje guardado', 200
         else:
-            print("mensaje no enviado", response.status_code)
+            print("mensaje no enviado", response)
             return 'error al enviar mensaje', response.status_code
     except Exception as e:
         return str(e), 403
-
 
 async def obtener_Mensaje_whatsapp(message):
     if 'type' not in message:
@@ -68,18 +66,15 @@ async def obtener_Mensaje_whatsapp(message):
 
     return text
 
-
 async def sumar_total_pedido(product_items):
     total = 0
     for item in product_items:
         total += item['item_price'] * item['quantity']
     return total
 
-
 async def procesar_orden(order):
     total_pedido = await sumar_total_pedido(order['product_items'])
     return f'Orden recibida. Total del pedido: {total_pedido} {order["product_items"][0]["currency"]}'
-
 
 def buttonReply_Message(number, options, body, footer, sedd, messageId):
     buttons = []
@@ -113,7 +108,6 @@ def buttonReply_Message(number, options, body, footer, sedd, messageId):
         }
     )
     return data
-
 
 def ButtonImage_Message(number, body, footer, options, url_img):
     id_base = "unique-postback-id-"
@@ -154,7 +148,6 @@ def ButtonImage_Message(number, body, footer, options, url_img):
         }
     })
     return data
-
 
 def contact_Message(number):
     data = json.dumps({
@@ -249,7 +242,6 @@ def contact_Message(number):
     })
     return data
 
-
 def textUrl_Message(number):
     data = json.dumps({
         "messaging_product": "whatsapp",
@@ -260,7 +252,6 @@ def textUrl_Message(number):
         }
     })
     return data
-
 
 def document_Message(number, url, caption, filename):
     data = json.dumps(
@@ -277,7 +268,6 @@ def document_Message(number, url, caption, filename):
         }
     )
     return data
-
 
 def location_Message(number, messageId):
     data = json.dumps({
@@ -296,7 +286,6 @@ def location_Message(number, messageId):
         },
     })
     return data
-
 
 async def listaDeOpciones_Message(number, body_text, header_text, footer_text, button_text, opciones):
     data = json.dumps({
@@ -325,30 +314,25 @@ async def listaDeOpciones_Message(number, body_text, header_text, footer_text, b
     })
     return data
 
-
 async def ClientLocation_Message(number):
-    try:
-        data = json.dumps({
-            "messaging_product": "whatsapp",
-            "recipient_type": "individual",
-            "to": number,
-            "type": "interactive",
-            "interactive": {
-                "type": "location_request_message",
-                "body": {
-                    "type": "text",
-                    "text": "Favor enviar ubicación para ir a dejar el pedido, gracias."
-                },
-                "action": {
-                    "name": "send_location"
-                }
-            }
-        })
-        return data
-      
-    except Exception as e:
-      print(e)
 
+    data = json.dumps({
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "type": "interactive",
+        "to": number,
+        "interactive": {
+            "type": "location_request_message",
+            "body": {
+                "text": "Envianos tu dirección para ir a dejar tu pedido"
+            },
+            "action": {
+                "name": "send_location"
+            }
+        }
+    })
+
+    return data
 
 def Image_Message(number):
     data = json.dumps({
@@ -360,7 +344,6 @@ def Image_Message(number):
         }
     })
     return data
-
 
 def catalogo_Message():
     data = json.dumps({
@@ -385,7 +368,6 @@ def catalogo_Message():
         }
     })
     return data
-
 
 def catalgoWSP_Message(number):
     data = json.dumps(
@@ -413,12 +395,8 @@ def catalgoWSP_Message(number):
     )
     return data
 
-# Enviar varios mensajes
-
-
 def preparar_mensajes(numero, mensajes):
     return [text_Message(numero, mensaje) for mensaje in mensajes]
-
 
 def text_Message(number, text, messageId=None):
     data = json.dumps({
@@ -434,7 +412,6 @@ def text_Message(number, text, messageId=None):
         }
     })
     return data
-
 
 def sticker_Message(number, sticker_id):
     data = json.dumps(
@@ -461,7 +438,6 @@ def sticker_Message(number, sticker_id):
     # 'animated': False}
     # }]}, 'field': 'messages'}]}]}
 
-
 def get_media_id(media_name, media_type):
     media_id = ""
     if media_type == "sticker":
@@ -474,19 +450,16 @@ def get_media_id(media_name, media_type):
     #    media_id = sett.audio.get(media_name, None)
     return media_id
 
-
 def mostrar_menu(number, messageId, body, footer, options, sed):
     replyButton_Data = buttonReply_Message(
         number, options, body, footer, "sed"+sed, messageId)
     # list_for.append(replyButton_Data)
     return replyButton_Data
 
-
 async def enviar_mensaje_usuario(list_for):
     for item in list_for:
         await enviar_Mensaje_whatsapp(item)
         await sleep(1)
-
 
 def markRead_Message(messageId):
     data = json.dumps(
@@ -497,7 +470,6 @@ def markRead_Message(messageId):
         }
     )
     return data
-
 
 async def administrar_chatbot(text, number, messageId, name, timestamp):
     print(type(text))
@@ -555,7 +527,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
         elif "catalogo wsp" in text:
             data = catalgoWSP_Message(number)
             list_for.append(data)
-        elif "send location" in text:
+        elif "enviar location" in text:
             data = await ClientLocation_Message(number)
             list_for.append(data)
 
@@ -745,4 +717,5 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             replyButtonData = buttonReply_Message(
                 number, options, body, footer, "sed7", messageId)
             list_for.append(replyButtonData)
+
     return await enviar_mensaje_usuario(list_for)
