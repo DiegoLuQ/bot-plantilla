@@ -94,23 +94,24 @@ async def rate_limit(request: Request):
     changes = entry['changes'][0]
     value = changes['value']
     message = value['messages'][0]
-    print(message)
-    number = message['from']
-    print(message['from'])
-    request_count = request_counts.get(number, 0)
+    if body:
+        print(message)
+        number = message['from']
+        print(message['from'])
+        request_count = request_counts.get(number, 0)
 
-    # Inicializar token como None
-    token = None
-    
-    # Verificar si se ha excedido el límite de solicitudes
-    if request_count >= MAX_REQUESTS_PER_MINUTE:
-        token = generate_jwt(number)      
+        # Inicializar token como None
+        token = None
+        
+        # Verificar si se ha excedido el límite de solicitudes
+        if request_count >= MAX_REQUESTS_PER_MINUTE:
+            token = generate_jwt(number)      
 
-    # Actualizar el recuento de solicitudes del número de number
-    request_counts[number] = request_count + 1
-    
-    # Retornar el token generado
-    return token
+        # Actualizar el recuento de solicitudes del número de number
+        request_counts[number] = request_count + 1
+        
+        # Retornar el token generado
+        return token
 
 @app.post('/whatsapp', dependencies=[Depends(rate_limit), Depends(check_blocked)])
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
