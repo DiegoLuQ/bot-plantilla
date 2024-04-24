@@ -103,20 +103,19 @@ async def rate_limit(request: Request):
             numero_celular = number
             request_count = request_counts.get(numero_celular, 0)
 
-            # Inicializar token como None
-            token = None
-            
-            # Verificar si se ha excedido el límite de solicitudes
-            if request_count >= MAX_REQUESTS_PER_MINUTE:
-                token = generate_jwt(numero_celular)      
+        # Inicializar token como None
+        token = None
+        
+        # Verificar si se ha excedido el límite de solicitudes
+        if request_count >= MAX_REQUESTS_PER_MINUTE:
+            token = generate_jwt(numero_celular)      
 
-            # Actualizar el recuento de solicitudes del número de numero_celular
-            request_counts[numero_celular] = request_count + 1
-            
-            # Retornar el token generado
-            return token
-        else:
-            return None  # Si 'messages' no está presente, retornar None
+        # Actualizar el recuento de solicitudes del número de numero_celular
+        request_counts[numero_celular] = request_count + 1
+        
+        # Retornar el token generado
+        return token
+        
     except KeyError:
         return None  # Manejar KeyError y retornar None si se produce uno
 
