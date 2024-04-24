@@ -101,7 +101,8 @@ async def rate_limit(request: Request):
             print(body['entry'][0]['changes'][0]['value'])
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             numero_celular = number
-            request_count = request_counts.get(numero_celular, 0)
+        
+        request_count = request_counts.get(numero_celular, 0)
 
         # Inicializar token como None
         token = None
