@@ -40,7 +40,12 @@ def is_blocked(token):
 async def check_blocked(request: Request, response: Response):
     token = request.cookies.get("token")
     body = await request.json()
-    number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
+    body = await request.json()
+    entry = body['entry'][0]
+    changes = entry['changes'][0]
+    value = changes['value']
+    message = value['messages'][0]
+    number = message['from']
     
     if token and is_blocked(token):
         request_counts[number] = 0
@@ -85,7 +90,11 @@ app = FastAPI(lifespan=app_lifespan)
     
 async def rate_limit(request: Request):
     body = await request.json()
-    number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
+    entry = body['entry'][0]
+    changes = entry['changes'][0]
+    value = changes['value']
+    message = value['messages'][0]
+    number = message['from']
     numero_celular = number
     request_count = request_counts.get(numero_celular, 0)
 
