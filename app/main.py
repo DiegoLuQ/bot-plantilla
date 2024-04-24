@@ -43,18 +43,18 @@ async def check_blocked(request: Request, response: Response):
     entry = body['entry'][0]
     changes = entry['changes'][0]
     value = changes['value']
-    message = value['messages'][0]
-    number = message['from']
+    if message := value['messages'][0]:
+        number = message['from']
     
-    if token and is_blocked(token):
-        request_counts[number] = 0
-        raise HTTPException(status_code=403, detail="Usuario bloqueado")
-    elif not token:
-        print("token Eliminado")
-        response.delete_cookie("token")  # Eliminar la cookie si no hay token
-    else:
-        print("token Eliminado")
-        response.delete_cookie("token")  # Eliminar la cookie si el usuario ya no está bloqueado
+        if token and is_blocked(token):
+            request_counts[number] = 0
+            raise HTTPException(status_code=403, detail="Usuario bloqueado")
+        elif not token:
+            print("token Eliminado")
+            response.delete_cookie("token")  # Eliminar la cookie si no hay token
+        else:
+            print("token Eliminado")
+            response.delete_cookie("token")  # Eliminar la cookie si el usuario ya no está bloqueado
 
 async def check_request_counts():
     try:
