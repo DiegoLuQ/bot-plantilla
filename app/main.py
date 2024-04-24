@@ -44,7 +44,7 @@ async def check_blocked(request: Request, response: Response):
         if 'messages' in body['entry'][0]['changes'][0]['value']:
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
         else:
-            return
+            return "no existe number, es otro json"
         
         token = request.cookies.get("token")
         if token and is_blocked(token):
