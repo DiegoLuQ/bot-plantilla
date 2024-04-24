@@ -93,8 +93,7 @@ async def rate_limit(request: Request):
     entry = body['entry'][0]
     changes = entry['changes'][0]
     value = changes['value']
-    message = value['messages'][0]
-    if body:
+    if message := value['messages'][0]:
         print(message)
         number = message['from']
         print(message['from'])
