@@ -120,7 +120,7 @@ async def rate_limit(request: Request):
     except KeyError:
         return None  # Manejar KeyError y retornar None si se produce uno
 
-@app.post('/whatsapp', dependencies=[Depends(rate_limit),Depends(check_blocked)])
+@app.post('/whatsapp', dependencies=[Depends(check_blocked), Depends(rate_limit)])
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
     try:
         # Verificar si el token está presente y no es None
