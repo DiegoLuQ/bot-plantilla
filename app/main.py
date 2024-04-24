@@ -96,7 +96,7 @@ async def rate_limit(request: Request):
         body = await request.json()
         # Verificar si 'messages' está presente en el JSON
         if 'messages' in body['entry'][0]['changes'][0]['value']:
-            print(body)
+            print(body['entry'][0]['changes'][0]['value'])
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             numero_celular = number
             request_count = request_counts.get(numero_celular, 0)
@@ -128,6 +128,8 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         
         body = await request.json()
         print(body)
+        print(token)
+        
         entry = body['entry'][0]
         changes = entry['changes'][0]
         value = changes['value']
