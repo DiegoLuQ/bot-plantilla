@@ -16,7 +16,7 @@ request_counts = {}
 exceeded_numbers = set()
 
 # Límite de solicitudes por hora
-MAX_REQUESTS_PER_MINUTE = 15
+MAX_REQUESTS_PER_MINUTE = 2
 
         
 def generate_jwt(number):
@@ -85,7 +85,7 @@ async def app_lifespan(app: FastAPI):
 # if __name__ == "__main__":
 #     uvicorn.run(app, host="0.0.0.0", port=94)
 
-app = FastAPI()
+app = FastAPI(lifespan=app_lifespan)
     
 async def rate_limit(request: Request):
     body = await request.json()
@@ -113,7 +113,8 @@ async def rate_limit(request: Request):
         # Retornar el token generado
         return token
 
-@app.post('/whatsapp', dependencies=[Depends(rate_limit), Depends(check_blocked)])
+# @app.post('/whatsapp', dependencies=[Depends(rate_limit), Depends(check_blocked)])
+@app.post('/whatsapp', dependencies=[Depends(check_blocked)])
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
     try:
         # Verificar si el token está presente y no es None
