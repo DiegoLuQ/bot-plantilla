@@ -14,6 +14,7 @@ class Settings:
     wsp_url = environ.get('WSP_URL')
     wsp_token = environ.get('TOKEN_WSP')
     doc_pdf = environ.get("DOC_PDF")
+    SECRET_KEY = environ.get('SECRET_KEY')
     stickers = {
     "mort":381731608015965,
     "poyo_feliz": 984778742532668,

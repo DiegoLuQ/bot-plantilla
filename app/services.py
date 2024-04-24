@@ -1,10 +1,11 @@
 import httpx
 import json
 import time
+import os
 from asyncio import sleep
 from config import settings as sett
 from datetime import datetime
-
+from uuid import uuid4
 
 async def guardar_datos_db(data):
     try:
@@ -60,11 +61,40 @@ async def obtener_Mensaje_whatsapp(message):
     elif typeMessage == 'order':
         # Llama a una función que procesa y resume la orden, esta función se debe definir
         text = message['order']
-
+    elif typeMessage == 'location':
+        text = "Ubicación"
+    elif typeMessage == 'image':
+        text = message['image']
     else:
         text = 'mensaje no reconocido'
 
     return text
+
+async def ObtenerIdImagen(image_id):
+    url = f"https://graph.facebook.com/v19.0/{image_id}"
+    whatsapp_token = sett.wsp_token
+    async with httpx.AsyncClient() as client:
+        headers = {"Authorization": f"Bearer {whatsapp_token}"}
+        response = await client.get(url, headers=headers)
+        data = response.json()
+        return data
+
+async def descargar_imagen(url, number):
+    print(url)
+    whatsapp_token = sett.wsp_token
+    async with httpx.AsyncClient() as client:
+        headers = {"Authorization": f"Bearer {whatsapp_token}"}
+        #la url es la url que obtenemos del json de ObtenerIdImagen
+        response = await client.get(url, headers=headers)
+        # Guardar la imagen en un archivo local
+        nombre_archivo = f"{number}_{uuid4()}.jpg"
+        ruta_carpeta = os.path.join("imagenes")
+        # Crear la carpeta si no existe
+        os.makedirs(ruta_carpeta, exist_ok=True)
+        # Guardar la imagen en la carpeta
+        ruta_completa = os.path.join(ruta_carpeta, nombre_archivo)
+        with open(ruta_completa, "wb") as f:
+            f.write(response.content)
 
 async def sumar_total_pedido(product_items):
     total = 0
@@ -324,7 +354,7 @@ async def ClientLocation_Message(number):
         "interactive": {
             "type": "location_request_message",
             "body": {
-                "text": "Envianos tu dirección para ir a dejar tu pedido"
+                "text": "Envianos tu dirección para ir a dejar tu pedido \n 👇"
             },
             "action": {
                 "name": "send_location"
@@ -409,7 +439,8 @@ def text_Message(number, text, messageId=None):
         "type": "text",
         "text": {
             "body": text
-        }
+        },
+        
     })
     return data
 
@@ -471,18 +502,32 @@ def markRead_Message(messageId):
     )
     return data
 
+async def bloquear_usuario(text, number, messageId, name, timestamp):
+    # print(type(text))
+    list_for = []
+    
+    def welcome_message():
+        body = "Disculpa🙏, parece que estoy un poco abrumado 🥱 por la cantidad de mensajes. Permíteme tomar un breve descanso de 30 segundos ⏳ para reorganizarme y estaré de vuelta contigo enseguida🏃💨. ¡Gracias por tu paciencia! 😊"
+        return text_Message(number=number, messageId=messageId, text=body)
+    if text:
+        list_for.append(welcome_message())
+        
+    return await enviar_mensaje_usuario(list_for)
+
 async def administrar_chatbot(text, number, messageId, name, timestamp):
-    print(type(text))
+    # print(type(text))
     list_for = []
     lista_privada = ["hola", "admin"]
 
     def welcome_message():
-        body = "Hola, ¡bienvenido a SF! ❤️ Soy tu asistente virtual Jack 24/7. Navega por nuestro menú, conoce más sobre SF 📊 y descubre cómo iniciar tu negocio con nosotros 🚀."
+        body = "Hola, ¡bienvenido a SF! ❤️ Soy tu asistente virtual Jack 24/7. Navega por nuestro menú, conoce más sobre SF 😎 y descubre cómo iniciar tu negocio con nosotros 🚀."
         footer = "Equipo SF"
         options = ["Catalogo", "Información", "Ventas"]
         return mostrar_menu(number, messageId, body, footer, options, sed="1")
 
-    if type(text) == dict:
+    if 'product_items' in text:
+        print("____")
+        print(text)
         data_text = await procesar_orden(text)
         data = text_Message(number, data_text, messageId)
         data_img = ButtonImage_Message(number,
@@ -491,7 +536,11 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
                                        options=["Transferencia", "Pago en Efectivo", "3er Opcion"], url_img="https://i.postimg.cc/PJPRZJBh/e35f9d3b-f59b-44ed-91e2-e6742799baad.png")
         list_for.append(data_img)
         list_for.append(data)
-
+    elif 'mime_type' in text:
+        imagen_id = text['id']
+        data_imagen = await ObtenerIdImagen(imagen_id)
+        imagen_url = data_imagen['url']
+        await descargar_imagen(imagen_url, number)
     else:
         text = text.lower()
         payload = json.dumps({
@@ -527,7 +576,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
         elif "catalogo wsp" in text:
             data = catalgoWSP_Message(number)
             list_for.append(data)
-        elif "enviar location" in text:
+        elif "enviar ubicación" in text:
             data = await ClientLocation_Message(number)
             list_for.append(data)
 

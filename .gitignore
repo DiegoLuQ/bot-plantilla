@@ -6,10 +6,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+link_y_notas.md
 # C extensions
 *.so
-
+main_bloqueode_numero.py
 # Distribution / packaging
 .Python
 build/
