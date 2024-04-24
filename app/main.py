@@ -94,9 +94,9 @@ app = FastAPI(lifespan=app_lifespan)
 async def rate_limit(request: Request):
     try:
         body = await request.json()
-        print(body)
         # Verificar si 'messages' está presente en el JSON
         if 'messages' in body['entry'][0]['changes'][0]['value']:
+            print(body)
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             numero_celular = number
             request_count = request_counts.get(numero_celular, 0)
@@ -118,7 +118,7 @@ async def rate_limit(request: Request):
     except KeyError:
         return None  # Manejar KeyError y retornar None si se produce uno
 
-@app.post('/whatsapp', dependencies=[Depends(rate_limit), Depends(check_blocked)])
+@app.post('/whatsapp', dependencies=[Depends(check_blocked)])
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
     try:
         # Verificar si el token está presente y no es None
