@@ -38,29 +38,33 @@ def is_blocked(token):
 
 # Middleware para verificar si el usuario está bloqueado
 async def check_blocked(request: Request, response: Response):
-    token = request.cookies.get("token")
-    body = await request.json()
-    entry = body['entry'][0]
-    changes = entry['changes'][0]
-    value = changes['value']
-    if message := value['messages'][0]:
-        number = message['from']
-    
-        if token and is_blocked(token):
-            request_counts[number] = 0
-            raise HTTPException(status_code=403, detail="Usuario bloqueado")
-        elif not token:
-            print("token Eliminado")
-            response.delete_cookie("token")  # Eliminar la cookie si no hay token
+    try:
+        body = await request.json()
+        # Verificar si 'messages' está presente en el JSON
+        if 'messages' in body['entry'][0]['changes'][0]['value']:
+            token = request.cookies.get("token")
+            number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
+            
+            if token and is_blocked(token):
+                request_counts[number] = 0
+                raise HTTPException(status_code=403, detail="Usuario bloqueado")
+            elif not token:
+                print("Token eliminado")
+                response.delete_cookie("token")  # Eliminar la cookie si no hay token
+            else:
+                print("Token eliminado")
+                response.delete_cookie("token")  # Eliminar la cookie si el usuario ya no está bloqueado
         else:
-            print("token Eliminado")
-            response.delete_cookie("token")  # Eliminar la cookie si el usuario ya no está bloqueado
+            print("No hay mensajes en el JSON")  # Manejar el caso en que no haya mensajes en el JSON
+    except KeyError:
+        print("Error de clave")  # Manejar KeyError si se produce uno
+
 
 async def check_request_counts():
     try:
-        BLOCK_DURATION_MINUTES = 60
+        BLOCK_DURATION_MINUTES = 0.8
         while True:
-            await sleep(BLOCK_DURATION_MINUTES* 60)
+            await sleep(BLOCK_DURATION_MINUTES * 60)
             print("Verificando Solicitudes",request_counts)
             # await sleep(20)
             # request_counts.clear()
@@ -88,32 +92,33 @@ async def app_lifespan(app: FastAPI):
 app = FastAPI(lifespan=app_lifespan)
     
 async def rate_limit(request: Request):
-    body = await request.json()
-    print(body)
-    entry = body['entry'][0]
-    changes = entry['changes'][0]
-    value = changes['value']
-    if message := value['messages'][0]:
-        print(message)
-        number = message['from']
-        print(message['from'])
-        request_count = request_counts.get(number, 0)
+    try:
+        body = await request.json()
+        print(body)
+        # Verificar si 'messages' está presente en el JSON
+        if 'messages' in body['entry'][0]['changes'][0]['value']:
+            number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
+            numero_celular = number
+            request_count = request_counts.get(numero_celular, 0)
 
-        # Inicializar token como None
-        token = None
-        
-        # Verificar si se ha excedido el límite de solicitudes
-        if request_count >= MAX_REQUESTS_PER_MINUTE:
-            token = generate_jwt(number)      
+            # Inicializar token como None
+            token = None
+            
+            # Verificar si se ha excedido el límite de solicitudes
+            if request_count >= MAX_REQUESTS_PER_MINUTE:
+                token = generate_jwt(numero_celular)      
 
-        # Actualizar el recuento de solicitudes del número de number
-        request_counts[number] = request_count + 1
-        
-        # Retornar el token generado
-        return token
+            # Actualizar el recuento de solicitudes del número de numero_celular
+            request_counts[numero_celular] = request_count + 1
+            
+            # Retornar el token generado
+            return token
+        else:
+            return None  # Si 'messages' no está presente, retornar None
+    except KeyError:
+        return None  # Manejar KeyError y retornar None si se produce uno
 
-# @app.post('/whatsapp', dependencies=[Depends(rate_limit), Depends(check_blocked)])
-@app.post('/whatsapp', dependencies=[Depends(check_blocked)])
+@app.post('/whatsapp', dependencies=[Depends(rate_limit), Depends(check_blocked)])
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
     try:
         # Verificar si el token está presente y no es None
@@ -122,7 +127,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
             response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
         
         body = await request.json()
-        # print(body)
+        print(body)
         entry = body['entry'][0]
         changes = entry['changes'][0]
         value = changes['value']
