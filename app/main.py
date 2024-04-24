@@ -111,7 +111,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
             response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
         
         body = await request.json()
-        # print(body)
+        print(body)
         entry = body['entry'][0]
         changes = entry['changes'][0]
         value = changes['value']
