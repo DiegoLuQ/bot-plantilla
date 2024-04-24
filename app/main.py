@@ -42,18 +42,20 @@ async def check_blocked(request: Request, response: Response):
         body = await request.json()
         # Verificar si 'messages' está presente en el JSON
         if 'messages' in body['entry'][0]['changes'][0]['value']:
-            token = request.cookies.get("token")
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
-            
-            if token and is_blocked(token):
-                request_counts[number] = 0
-                raise HTTPException(status_code=403, detail="Usuario bloqueado")
-            elif not token:
-                print("Token eliminado")
-                response.delete_cookie("token")  # Eliminar la cookie si no hay token
-            else:
-                print("Token eliminado")
-                response.delete_cookie("token")  # Eliminar la cookie si el usuario ya no está bloqueado
+        else:
+            return
+        
+        token = request.cookies.get("token")
+        if token and is_blocked(token):
+            request_counts[number] = 0
+            raise HTTPException(status_code=403, detail="Usuario bloqueado")
+        elif not token:
+            print("Token eliminado")
+            response.delete_cookie("token")  # Eliminar la cookie si no hay token
+        else:
+            print("Token eliminado")
+            response.delete_cookie("token")  # Eliminar la cookie si el usuario ya no está bloqueado
         # else:
         #     print("No hay mensajes en el JSON")  # Manejar el caso en que no haya mensajes en el JSON
     except KeyError:
