@@ -40,7 +40,6 @@ def is_blocked(token):
 async def check_blocked(request: Request, response: Response):
     token = request.cookies.get("token")
     body = await request.json()
-    body = await request.json()
     entry = body['entry'][0]
     changes = entry['changes'][0]
     value = changes['value']
@@ -86,15 +85,18 @@ async def app_lifespan(app: FastAPI):
 # if __name__ == "__main__":
 #     uvicorn.run(app, host="0.0.0.0", port=94)
 
-app = FastAPI(lifespan=app_lifespan)
+app = FastAPI()
     
 async def rate_limit(request: Request):
     body = await request.json()
+    print(body)
     entry = body['entry'][0]
     changes = entry['changes'][0]
     value = changes['value']
     message = value['messages'][0]
+    print(message)
     number = message['from']
+    print(message['from'])
     request_count = request_counts.get(number, 0)
 
     # Inicializar token como None
@@ -119,7 +121,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
             response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
         
         body = await request.json()
-        print(body)
+        # print(body)
         entry = body['entry'][0]
         changes = entry['changes'][0]
         value = changes['value']
