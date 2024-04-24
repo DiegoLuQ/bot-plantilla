@@ -54,8 +54,8 @@ async def check_blocked(request: Request, response: Response):
             else:
                 print("Token eliminado")
                 response.delete_cookie("token")  # Eliminar la cookie si el usuario ya no está bloqueado
-        else:
-            print("No hay mensajes en el JSON")  # Manejar el caso en que no haya mensajes en el JSON
+        # else:
+        #     print("No hay mensajes en el JSON")  # Manejar el caso en que no haya mensajes en el JSON
     except KeyError:
         print("Error de clave")  # Manejar KeyError si se produce uno
 
