@@ -99,8 +99,11 @@ async def rate_limit(request: Request):
         # Verificar si 'messages' está presente en el JSON
         if 'messages' in body['entry'][0]['changes'][0]['value']:
             print(body['entry'][0]['changes'][0]['value'])
-            number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
-            numero_celular = number
+        else:
+            return None
+        
+        number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
+        numero_celular = number
         
         request_count = request_counts.get(numero_celular, 0)
 
