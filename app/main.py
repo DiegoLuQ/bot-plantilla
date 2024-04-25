@@ -9,21 +9,21 @@ from asyncio import sleep, create_task
 from contextlib import asynccontextmanager
 
 SECRET_KEY = sett.SECRET_KEY
-BLOCK_DURATION_SECONDS = 15
 # Diccionario para almacenar el recuento de solicitudes por número de celular
 request_counts = {}
 
 # Lista para almacenar los números de celular que han excedido el límite
 exceeded_numbers = set()
 
+BLOCK_DURATION_SECONDS_TOKEN = int(sett.BLOCK_DURATION_SECONDS_TOKEN) if sett.BLOCK_DURATION_SECONDS_TOKEN else 10
 # Límite de solicitudes por hora
-MAX_REQUESTS_PER_MINUTE = 2
-
+MAX_REQUESTS_PER_MINUTE = int(sett.MAX_REQUESTS_PER_MINUTE) if sett.MAX_REQUESTS_PER_MINUTE else 20
+BLOCK_DURATION_MINUTES_FOR_REQUEST = float(sett.BLOCK_DURATION_MINUTES_FOR_REQUEST) if sett.BLOCK_DURATION_MINUTES_FOR_REQUEST else 0.5
         
 def generate_jwt(number):
     payload = {
         "number": number,
-        "exp": time.time() + BLOCK_DURATION_SECONDS
+        "exp": time.time() + (BLOCK_DURATION_SECONDS_TOKEN * 60)
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")    
     
@@ -58,13 +58,13 @@ async def delete_token(number):
 
 async def check_request_counts():
     try:
-        BLOCK_DURATION_MINUTES = 0.8
+        
         while True:
-            await sleep(BLOCK_DURATION_MINUTES * 60)
+            await sleep(BLOCK_DURATION_MINUTES_FOR_REQUEST * 60)
             print("Verificando Solicitudes",request_counts)
+            request_counts.clear()
             
             # await sleep(20)
-            # request_counts.clear()
             # print("Limpiando Solicitudes",request_counts)
     except Exception as e:
       print(e)
@@ -121,7 +121,6 @@ async def check_blocked(request: Request, response: Response):
     if is_valid_token(token) and is_blocked(token):
         raise HTTPException(status_code=403, detail="Usuario bloqueado")
     elif not token:
-        print("token Eliminado")
         response.delete_cookie("token")  # Eliminar la cookie si no hay token
         
         
@@ -144,11 +143,12 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         timestamp = int(message['timestamp'])
         print("whatsapp: ", body)
         print("token: " ,token)
+        print("Contando Solicitudes", request_counts)
         
         if is_valid_token(token):
             # Configurar la cookie con el token
             # print("token valido")
-            response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
+            response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS_TOKEN, httponly=True)
             print("services.bloquear")
             create_task(delete_token(number))
             await services.bloquear_usuario(text, number, messageId, name, timestamp)

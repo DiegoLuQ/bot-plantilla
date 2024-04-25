@@ -15,6 +15,9 @@ class Settings:
     wsp_token = environ.get('TOKEN_WSP')
     doc_pdf = environ.get("DOC_PDF")
     SECRET_KEY = environ.get('SECRET_KEY')
+    BLOCK_DURATION_SECONDS_TOKEN = environ.get("BLOCK_DURATION_SECONDS_TOKEN")
+    MAX_REQUESTS_PER_MINUTE = environ.get("MAX_REQUESTS_PER_MINUTE")
+    BLOCK_DURATION_MINUTES_FOR_REQUEST = environ.get("BLOCK_DURATION_MINUTES_FOR_REQUEST")
     stickers = {
     "mort":381731608015965,
     "poyo_feliz": 984778742532668,

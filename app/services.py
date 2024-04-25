@@ -106,6 +106,18 @@ async def procesar_orden(order):
     total_pedido = await sumar_total_pedido(order['product_items'])
     return f'Orden recibida. Total del pedido: {total_pedido} {order["product_items"][0]["currency"]}'
 
+def sendImage_Message(number):
+    data = json.dumps({
+    "messaging_product": "whatsapp",
+    "recipient_type": "individual",
+    "to": number,
+    "type": "image",
+    "image": {
+        "link": "https://bookstore.cl/3496-large_default/escritorio-eleva.jpg"
+    }
+})
+    return data
+
 def buttonReply_Message(number, options, body, footer, sedd, messageId):
     buttons = []
 
@@ -557,7 +569,9 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             # sticker = sticker = sticker_Message(number, get_media_id('perro_traje', 'sticker'))
             # list_for.append(sticker)
             list_for.append(welcome_message())
-
+        elif "img_send" in text:
+            data = sendImage_Message(number)
+            list_for.append(data)
         # CATALOGO
         elif "catalogo" in text:
             body = "Buena elección para revisar nuestros productos, te dejo aquí unas opciones"
