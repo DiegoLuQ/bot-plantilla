@@ -69,7 +69,7 @@ async def check_blocked(request: Request):
             print("token de check_blocked: ",request.cookies.get(f"token_{number}"))
             is_true_token = is_valid_token(request.cookies.get(f"token_{number}"))
             
-            print("son validos?: ",is_true_token, is_blocked(request.cookies.get(f"token_{number}")))
+            print("son validos?: ", is_true_token, is_blocked(request.cookies.get(f"token_{number}")))
             
             if is_true_token and is_blocked(request.cookies.get(f"token_{number}")):
                 print("dentro del if de check_blocked")
@@ -182,7 +182,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
             # Configurar la cookie con el token
             # print("token valido")
             print("services.bloqueado")
-            # await check_blocked(request)
+            await check_blocked(request)
             create_task(delete_token(response, number))
             await services.bloquear_usuario(text, number, messageId, name, timestamp)
 
