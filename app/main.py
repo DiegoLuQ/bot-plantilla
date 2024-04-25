@@ -133,7 +133,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         
         body = await request.json()
         print(body)
-        print(token)
+        print("token: " ,token)
         
         entry = body['entry'][0]
         changes = entry['changes'][0]
