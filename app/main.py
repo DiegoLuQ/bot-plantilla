@@ -59,7 +59,7 @@ async def delete_token(response:Response, number):
         print(e)
 
 # Middleware para verificar si el usuario está bloqueado
-async def check_blocked(request: Request):
+async def check_blocked(request: Request, token=None):
     try:
         body = await request.json()
         # Verificar si 'messages' está presente en el JSON
@@ -67,9 +67,9 @@ async def check_blocked(request: Request):
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             # print("el number en el json existe")
             print("token de check_blocked: ",request.cookies.get(f"token_{number}"))
-            is_true_token = is_valid_token(request.cookies.get(f"token_{number}"))
+            is_true_token = is_valid_token(token)
             
-            print("son validos?: ", is_true_token, is_blocked(request.cookies.get(f"token_{number}")))
+            print("son validos?, isTrue: ", is_true_token, "- is_blocked: ", is_blocked(request.cookies.get(f"token_{number}")))
             
             if is_true_token and is_blocked(request.cookies.get(f"token_{number}")):
                 print("dentro del if de check_blocked")
@@ -88,13 +88,9 @@ async def check_blocked(request: Request):
             return None
         else:
             # No se encuentra la clave 'messages', no hacer nada o manejar según sea necesario
-            return "no existe number, es otro json"
-        
-        
+            return "no existe number, es otro json"      
     except KeyError as k:
         print(k)  # Manejar KeyError si se produce uno
-
-
 
 async def check_request_counts():
     try:
@@ -123,11 +119,9 @@ async def app_lifespan(app: FastAPI):
         # Limpiar los temporizadores y desbloquear los números al finalizar el contexto
         print("Fin")
 
-
-
 app = FastAPI(lifespan=app_lifespan)
     
-async def rate_limit(request: Request):
+async def rate_limit(request: Request, response:Response):
     try:
         body = await request.json()
         # Verificar si 'messages' está presente en el JSON
@@ -141,9 +135,10 @@ async def rate_limit(request: Request):
             token = None
             # Verificar si se ha excedido el límite de solicitudes
             if request_count >= MAX_REQUESTS_PER_MINUTE:
-                print("verificando usuario: ",request_count)
+                print("verificando usuario: ",request_counts)
                 print("generando el token")
                 token = generate_jwt(numero_celular)      
+                response.set_cookie(key="token_"+number, value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
             # Actualizar el recuento de solicitudes del número de numero_celular
             request_counts[numero_celular] = request_count + 1
             # Retornar el token generado
@@ -175,14 +170,16 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         text = await services.obtener_Mensaje_whatsapp(message)
         timestamp = int(message['timestamp'])
         print("whatsapp: ", body)
-        response.set_cookie(key="token_"+number, value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
+        # response.set_cookie(key="token_"+number, value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
         print("token: " ,token)
+        all_cookies = request.cookies
+        print("Cookies:", all_cookies)
         
         if is_valid_token(token):
             # Configurar la cookie con el token
             # print("token valido")
             print("services.bloqueado")
-            await check_blocked(request)
+            await check_blocked(request, token)
             create_task(delete_token(response, number))
             await services.bloquear_usuario(text, number, messageId, name, timestamp)
 
