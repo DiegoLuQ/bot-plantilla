@@ -66,7 +66,7 @@ async def check_blocked(request: Request):
         if body['entry'][0]['changes'][0]['value']['messages'][0]['from']:
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             # print("el number en el json existe")
-            # print("token de check_blocked: ",request.cookies.get(f"token_{number}"))
+            print("token de check_blocked: ",request.cookies.get(f"token_{number}"))
             is_true_token = is_valid_token(request.cookies.get(f"token_{number}"))
             
             print("son validos?: ",is_true_token, is_blocked(request.cookies.get(f"token_{number}")))
@@ -176,7 +176,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         timestamp = int(message['timestamp'])
         print("whatsapp: ", body)
         response.set_cookie(key="token_"+number, value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
-        # print("token: " ,token)
+        print("token: " ,token)
         
         if is_valid_token(token):
             # Configurar la cookie con el token
