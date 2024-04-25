@@ -59,14 +59,14 @@ async def delete_token(response:Response, number):
         print(e)
 
 # Middleware para verificar si el usuario está bloqueado
-async def check_blocked(request: Request, response: Response):
+async def check_blocked(request: Request):
     try:
         body = await request.json()
         # Verificar si 'messages' está presente en el JSON
         if body['entry'][0]['changes'][0]['value']['messages'][0]['from']:
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
-            print("el number en el json existe")
-            print("token de check_blocked: ",request.cookies.get(f"token_{number}"))
+            # print("el number en el json existe")
+            # print("token de check_blocked: ",request.cookies.get(f"token_{number}"))
             is_true_token = is_valid_token(request.cookies.get(f"token_{number}"))
             
             print("son validos?: ",is_true_token, is_blocked(request.cookies.get(f"token_{number}")))
@@ -135,14 +135,14 @@ async def rate_limit(request: Request):
         # Ejecutar función para el json2
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             numero_celular = number
-            print("Dentro de el primer if de rate_limit")
+            # print("Dentro de el primer if de rate_limit")
             request_count = request_counts.get(numero_celular, 0)
             # Inicializar token como None
             token = None
             # Verificar si se ha excedido el límite de solicitudes
             if request_count >= MAX_REQUESTS_PER_MINUTE:
-                print("verificando usuario: ",request_count)
-                print("generando el token")
+                # print("verificando usuario: ",request_count)
+                # print("generando el token")
                 token = generate_jwt(numero_celular)      
             # Actualizar el recuento de solicitudes del número de numero_celular
             request_counts[numero_celular] = request_count + 1
@@ -176,12 +176,13 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         timestamp = int(message['timestamp'])
         print("whatsapp: ", body)
         response.set_cookie(key="token_"+number, value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
-        print("token: " ,token)
+        # print("token: " ,token)
         
         if is_valid_token(token):
             # Configurar la cookie con el token
-            print("token valido")
+            # print("token valido")
             print("services.bloqueado")
+            await check_blocked(request)
             create_task(delete_token(response, number))
             await services.bloquear_usuario(text, number, messageId, name, timestamp)
 
