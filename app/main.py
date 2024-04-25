@@ -50,7 +50,7 @@ def is_valid_token(token):
 async def delete_token(response:Response, number):
     try:
         BLOCK_DURATION_MINUTES = 0.9
-        await sleep(7)
+        await sleep(15)
         response.delete_cookie(key=f"token_{number}")
         request_counts[number] = 0
         print("Token eliminado desde delete_token")
@@ -59,14 +59,14 @@ async def delete_token(response:Response, number):
         print(e)
 
 # Middleware para verificar si el usuario está bloqueado
-async def check_blocked(request: Request, token=None):
+async def check_blocked(request: Request):
     try:
         body = await request.json()
         # Verificar si 'messages' está presente en el JSON
         if body['entry'][0]['changes'][0]['value']['messages'][0]['from']:
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             # print("el number en el json existe")
-            print("token de check_blocked: ",token)
+            print("token de check_blocked: ",request.cookies.get(f"token_{number}"))
             is_true_token = is_valid_token(request.cookies.get(f"token_{number}"))
             
             print("son validos?: ",is_true_token, is_blocked(request.cookies.get(f"token_{number}")))
@@ -182,7 +182,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
             # Configurar la cookie con el token
             # print("token valido")
             print("services.bloqueado")
-            await check_blocked(token, request)
+            # await check_blocked(request)
             create_task(delete_token(response, number))
             await services.bloquear_usuario(text, number, messageId, name, timestamp)
 
