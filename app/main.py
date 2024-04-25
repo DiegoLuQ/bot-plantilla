@@ -54,10 +54,10 @@ async def check_blocked(request: Request, response: Response):
         if 'messages' in body['entry'][0]['changes'][0]['value']:
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             token = request.cookies.get("token")
-            if token and is_blocked(token):
+            if is_valid_token(token) and is_blocked(token):
                 request_counts[number] = 0
                 raise HTTPException(status_code=403, detail="Usuario bloqueado")
-            elif not token:
+            elif token == None:
                 print("Token eliminado")
                 response.delete_cookie("token")  # Eliminar la cookie si no hay token
             else:
@@ -150,6 +150,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         # Verificar si el token está presente y no es None
         if is_valid_token(token):
             # Configurar la cookie con el token
+            print("token valido")
             response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
         
         body = await request.json()
@@ -171,7 +172,10 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         print("solicitudes",request_counts)
         if not is_valid_token(token):
             await services.administrar_chatbot(text, number, messageId, name, timestamp)
+            print("services.administrar")
         else:
+            print("token en el else")
+            print("services.bloqueado")
             await services.bloquear_usuario(text, number, messageId, name, timestamp)
             
         return 'EVENT_RECEIVED'   
