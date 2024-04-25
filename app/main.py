@@ -36,6 +36,16 @@ def is_blocked(token):
     except jwt.InvalidTokenError:
         return False  # Token inválido, el usuario no está bloqueado  
 
+def is_valid_token(token):
+    try:
+        # Decodificar y validar el token
+        jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return True  # El token es válido
+    except jwt.ExpiredSignatureError:
+        return False  # El token ha expirado
+    except jwt.InvalidTokenError:
+        return False  # El token no es válido
+
 # Middleware para verificar si el usuario está bloqueado
 async def check_blocked(request: Request, response: Response):
     try:
@@ -124,10 +134,10 @@ async def rate_limit(request: Request):
             return token
         elif 'statuses' in body['entry'][0]['changes'][0]['value']:
             # Si hay 'statuses' en el JSON, retornar None
-            return "si hay un statuses"
+            pass
         else:
             # No se encuentra la clave 'messages', no hacer nada o manejar según sea necesario
-            return "sin hacer nada"
+            pass
         
         
         
@@ -138,7 +148,7 @@ async def rate_limit(request: Request):
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
     try:
         # Verificar si el token está presente y no es None
-        if token:
+        if is_valid_token(token):
             # Configurar la cookie con el token
             response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
         
@@ -159,7 +169,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         timestamp = int(message['timestamp'])
         
         print("solicitudes",request_counts)
-        if not is_blocked(token):
+        if not is_valid_token(token):
             await services.administrar_chatbot(text, number, messageId, name, timestamp)
         else:
             await services.bloquear_usuario(text, number, messageId, name, timestamp)
