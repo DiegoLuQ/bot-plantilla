@@ -51,7 +51,8 @@ async def check_blocked(request: Request, response: Response):
     try:
         body = await request.json()
         # Verificar si 'messages' está presente en el JSON
-        if number := body['entry'][0]['changes'][0]['value']['messages'][0]['from']:
+        if body['entry'][0]['changes'][0]['value']['messages'][0]['from']:
+            number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             print("el number en el json existe")
             token = request.cookies.get("token")
             if is_valid_token(token) and is_blocked(token):
@@ -74,8 +75,9 @@ async def check_blocked(request: Request, response: Response):
             return "no existe number, es otro json"
         
         
-    except KeyError:
-        print("Error de clave")  # Manejar KeyError si se produce uno
+    except KeyError as k:
+        print(k)  # Manejar KeyError si se produce uno
+
 
 
 async def check_request_counts():
@@ -113,7 +115,7 @@ async def rate_limit(request: Request):
     try:
         body = await request.json()
         # Verificar si 'messages' está presente en el JSON
-        if 'messages' in body['entry'][0]['changes'][0]['value']:
+        if body['entry'][0]['changes'][0]['value']['messages'][0]['from']:
         # Ejecutar función para el json2
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             numero_celular = number
