@@ -106,7 +106,7 @@ async def rate_limit(request: Request):
         # Ejecutar función para el json2
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             numero_celular = number
-            
+            print("Dentro de el primer if de rate_limit")
             request_count = request_counts.get(numero_celular, 0)
 
             # Inicializar token como None
@@ -114,6 +114,7 @@ async def rate_limit(request: Request):
             
             # Verificar si se ha excedido el límite de solicitudes
             if request_count >= MAX_REQUESTS_PER_MINUTE:
+                print("generando el token")
                 token = generate_jwt(numero_celular)      
 
             # Actualizar el recuento de solicitudes del número de numero_celular
@@ -123,10 +124,10 @@ async def rate_limit(request: Request):
             return token
         elif 'statuses' in body['entry'][0]['changes'][0]['value']:
             # Si hay 'statuses' en el JSON, retornar None
-            return None
+            return "si hay un statuses"
         else:
             # No se encuentra la clave 'messages', no hacer nada o manejar según sea necesario
-            pass
+            return "sin hacer nada"
         
         
         
