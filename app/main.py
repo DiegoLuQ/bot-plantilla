@@ -43,21 +43,26 @@ async def check_blocked(request: Request, response: Response):
         # Verificar si 'messages' está presente en el JSON
         if 'messages' in body['entry'][0]['changes'][0]['value']:
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
+            token = request.cookies.get("token")
+            if token and is_blocked(token):
+                request_counts[number] = 0
+                raise HTTPException(status_code=403, detail="Usuario bloqueado")
+            elif not token:
+                print("Token eliminado")
+                response.delete_cookie("token")  # Eliminar la cookie si no hay token
+            else:
+                print("Token eliminado")
+                response.delete_cookie("token")  # Eliminar la cookie si el usuario ya no está bloqueado
+            # else:
+            #     print("No hay mensajes en el JSON")  # Manejar el caso en que no haya mensajes en el JSON
+        elif 'statuses' in body['entry'][0]['changes'][0]['value']:
+            # Si hay 'statuses' en el JSON, retornar None
+            return None
         else:
+            # No se encuentra la clave 'messages', no hacer nada o manejar según sea necesario
             return "no existe number, es otro json"
         
-        token = request.cookies.get("token")
-        if token and is_blocked(token):
-            request_counts[number] = 0
-            raise HTTPException(status_code=403, detail="Usuario bloqueado")
-        elif not token:
-            print("Token eliminado")
-            response.delete_cookie("token")  # Eliminar la cookie si no hay token
-        else:
-            print("Token eliminado")
-            response.delete_cookie("token")  # Eliminar la cookie si el usuario ya no está bloqueado
-        # else:
-        #     print("No hay mensajes en el JSON")  # Manejar el caso en que no haya mensajes en el JSON
+        
     except KeyError:
         print("Error de clave")  # Manejar KeyError si se produce uno
 
@@ -98,27 +103,32 @@ async def rate_limit(request: Request):
         body = await request.json()
         # Verificar si 'messages' está presente en el JSON
         if 'messages' in body['entry'][0]['changes'][0]['value']:
-            print(body['entry'][0]['changes'][0]['value'])
-        else:
+        # Ejecutar función para el json2
+            number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
+            numero_celular = number
+            
+            request_count = request_counts.get(numero_celular, 0)
+
+            # Inicializar token como None
+            token = None
+            
+            # Verificar si se ha excedido el límite de solicitudes
+            if request_count >= MAX_REQUESTS_PER_MINUTE:
+                token = generate_jwt(numero_celular)      
+
+            # Actualizar el recuento de solicitudes del número de numero_celular
+            request_counts[numero_celular] = request_count + 1
+            
+            # Retornar el token generado
+            return token
+        elif 'statuses' in body['entry'][0]['changes'][0]['value']:
+            # Si hay 'statuses' en el JSON, retornar None
             return None
+        else:
+            # No se encuentra la clave 'messages', no hacer nada o manejar según sea necesario
+            pass
         
-        number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
-        numero_celular = number
         
-        request_count = request_counts.get(numero_celular, 0)
-
-        # Inicializar token como None
-        token = None
-        
-        # Verificar si se ha excedido el límite de solicitudes
-        if request_count >= MAX_REQUESTS_PER_MINUTE:
-            token = generate_jwt(numero_celular)      
-
-        # Actualizar el recuento de solicitudes del número de numero_celular
-        request_counts[numero_celular] = request_count + 1
-        
-        # Retornar el token generado
-        return token
         
     except KeyError:
         return None  # Manejar KeyError y retornar None si se produce uno
@@ -132,7 +142,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
             response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
         
         body = await request.json()
-        print(body)
+        print("whatsapp: ", body)
         print("token: " ,token)
         
         entry = body['entry'][0]
