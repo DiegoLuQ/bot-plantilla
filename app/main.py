@@ -54,8 +54,10 @@ async def check_blocked(request: Request, response: Response):
         if body['entry'][0]['changes'][0]['value']['messages'][0]['from']:
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             print("el number en el json existe")
-            token = request.cookies.get("token")
-            if is_valid_token(token) and is_blocked(token):
+            if is_valid_token(request.cookies.get("token")):
+                
+                token = request.cookies.get("token")
+            if token and is_blocked(token):
                 print("dentro del if de check_blocked")
                 request_counts[number] = 0
                 raise HTTPException(status_code=403, detail="Usuario bloqueado")
