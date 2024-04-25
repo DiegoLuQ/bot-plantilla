@@ -51,8 +51,10 @@ async def delete_token(response:Response, number):
     try:
         BLOCK_DURATION_MINUTES = 0.9
         await sleep(7)
-        print("Token eliminado desde delete_token")
         response.delete_cookie(key=f"token_{number}")
+        request_counts[number] = 0
+        print("Token eliminado desde delete_token")
+        print(request_counts)
     except Exception as e:
         print(e)
 
@@ -71,8 +73,6 @@ async def check_blocked(request: Request, response: Response):
             
             if is_true_token and is_blocked(request.cookies.get(f"token_{number}")):
                 print("dentro del if de check_blocked")
-                request_counts[number] = 0
-                create_task(delete_token(response, number))
                 raise HTTPException(status_code=403, detail="Usuario bloqueado")
             
             elif is_true_token == None:
@@ -123,8 +123,7 @@ async def app_lifespan(app: FastAPI):
         # Limpiar los temporizadores y desbloquear los números al finalizar el contexto
         print("Fin")
 
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="0.0.0.0", port=94)
+
 
 app = FastAPI(lifespan=app_lifespan)
     
@@ -138,18 +137,15 @@ async def rate_limit(request: Request):
             numero_celular = number
             print("Dentro de el primer if de rate_limit")
             request_count = request_counts.get(numero_celular, 0)
-
             # Inicializar token como None
             token = None
-            
             # Verificar si se ha excedido el límite de solicitudes
             if request_count >= MAX_REQUESTS_PER_MINUTE:
+                print("verificando usuario: ",request_count)
                 print("generando el token")
                 token = generate_jwt(numero_celular)      
-
             # Actualizar el recuento de solicitudes del número de numero_celular
             request_counts[numero_celular] = request_count + 1
-            
             # Retornar el token generado
             return token
         elif 'statuses' in body['entry'][0]['changes'][0]['value']:
@@ -158,16 +154,12 @@ async def rate_limit(request: Request):
         else:
             # No se encuentra la clave 'messages', no hacer nada o manejar según sea necesario
             pass
-        
-        
-        
     except KeyError as e:
         return ("KeyError:", e)  # Manejar KeyError y retornar None si se produce uno
 
 @app.post('/whatsapp', dependencies=[Depends(check_blocked), Depends(rate_limit)])
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
     try:
-        # Verificar si el token está presente y no es None
         
         body = await request.json()
         
@@ -190,10 +182,12 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
             # Configurar la cookie con el token
             print("token valido")
             print("services.bloqueado")
+            create_task(delete_token(response, number))
             await services.bloquear_usuario(text, number, messageId, name, timestamp)
 
         else:
             print("services.administrar")
+            
             await services.administrar_chatbot(text, number, messageId, name, timestamp)
             return 'EVENT_RECEIVED'   
       
@@ -219,3 +213,6 @@ async def verify_token(request: Request):
             raise HTTPException(status_code=400, detail="Invalid request")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=94)
