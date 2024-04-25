@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Query, Request, HTTPException, Depends, Response, Cookie
 from config import settings as sett
+from typing import Optional
 from fastapi.responses import PlainTextResponse
 import services
 import jwt
@@ -46,6 +47,15 @@ def is_valid_token(token):
     except jwt.InvalidTokenError:
         return False  # El token no es válido
 
+async def delete_token(response:Response, number):
+    try:
+        BLOCK_DURATION_MINUTES = 0.9
+        await sleep(7)
+        print("Token eliminado desde delete_token")
+        response.delete_cookie(key=f"token_{number}")
+    except Exception as e:
+        print(e)
+
 # Middleware para verificar si el usuario está bloqueado
 async def check_blocked(request: Request, response: Response):
     try:
@@ -54,13 +64,17 @@ async def check_blocked(request: Request, response: Response):
         if body['entry'][0]['changes'][0]['value']['messages'][0]['from']:
             number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
             print("el number en el json existe")
-            print(request.cookies.get("token"))
-            is_true_token = is_valid_token(request.cookies.get("token"))
-                
-            if is_true_token and is_blocked(request.cookies.get("token")):
+            print("token de check_blocked: ",request.cookies.get(f"token_{number}"))
+            is_true_token = is_valid_token(request.cookies.get(f"token_{number}"))
+            
+            print("son validos?: ",is_true_token, is_blocked(request.cookies.get(f"token_{number}")))
+            
+            if is_true_token and is_blocked(request.cookies.get(f"token_{number}")):
                 print("dentro del if de check_blocked")
                 request_counts[number] = 0
+                create_task(delete_token(response, number))
                 raise HTTPException(status_code=403, detail="Usuario bloqueado")
+            
             elif is_true_token == None:
                 print("Token None")
                   # Eliminar la cookie si no hay token
@@ -88,6 +102,7 @@ async def check_request_counts():
         while True:
             await sleep(BLOCK_DURATION_MINUTES * 60)
             print("Verificando Solicitudes",request_counts)
+            
             # await sleep(20)
             # request_counts.clear()
             # print("Limpiando Solicitudes",request_counts)
@@ -146,8 +161,8 @@ async def rate_limit(request: Request):
         
         
         
-    except KeyError:
-        return None  # Manejar KeyError y retornar None si se produce uno
+    except KeyError as e:
+        return ("KeyError:", e)  # Manejar KeyError y retornar None si se produce uno
 
 @app.post('/whatsapp', dependencies=[Depends(check_blocked), Depends(rate_limit)])
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
@@ -168,7 +183,7 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         text = await services.obtener_Mensaje_whatsapp(message)
         timestamp = int(message['timestamp'])
         print("whatsapp: ", body)
-        response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
+        response.set_cookie(key="token_"+number, value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
         print("token: " ,token)
         
         if is_valid_token(token):
