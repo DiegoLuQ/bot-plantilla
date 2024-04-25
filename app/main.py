@@ -151,14 +151,8 @@ async def rate_limit(request: Request):
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
     try:
         # Verificar si el token está presente y no es None
-        if is_valid_token(token):
-            # Configurar la cookie con el token
-            print("token valido")
-            response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
         
         body = await request.json()
-        print("whatsapp: ", body)
-        print("token: " ,token)
         
         entry = body['entry'][0]
         changes = entry['changes'][0]
@@ -171,17 +165,20 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         
         text = await services.obtener_Mensaje_whatsapp(message)
         timestamp = int(message['timestamp'])
+        print("whatsapp: ", body)
+        response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS, httponly=True)
+        print("token: " ,token)
         
-        print("solicitudes",request_counts)
-        if not is_valid_token(token):
-            await services.administrar_chatbot(text, number, messageId, name, timestamp)
-            print("services.administrar")
-        else:
-            print("token en el else")
+        if is_valid_token(token):
+            # Configurar la cookie con el token
+            print("token valido")
             print("services.bloqueado")
             await services.bloquear_usuario(text, number, messageId, name, timestamp)
-            
-        return 'EVENT_RECEIVED'   
+
+        else:
+            print("services.administrar")
+            await services.administrar_chatbot(text, number, messageId, name, timestamp)
+            return 'EVENT_RECEIVED'   
       
     except Exception as e:
         return HTTPException(status_code=500, detail=str(e))
