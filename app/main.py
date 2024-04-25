@@ -141,8 +141,8 @@ async def rate_limit(request: Request):
             token = None
             # Verificar si se ha excedido el límite de solicitudes
             if request_count >= MAX_REQUESTS_PER_MINUTE:
-                # print("verificando usuario: ",request_count)
-                # print("generando el token")
+                print("verificando usuario: ",request_count)
+                print("generando el token")
                 token = generate_jwt(numero_celular)      
             # Actualizar el recuento de solicitudes del número de numero_celular
             request_counts[numero_celular] = request_count + 1
@@ -157,7 +157,7 @@ async def rate_limit(request: Request):
     except KeyError as e:
         return ("KeyError:", e)  # Manejar KeyError y retornar None si se produce uno
 
-@app.post('/whatsapp', dependencies=[Depends(check_blocked), Depends(rate_limit)])
+@app.post('/whatsapp', dependencies=[Depends(rate_limit)])
 async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
     try:
         
