@@ -1,135 +1,37 @@
-from fastapi import FastAPI, Query, Request, HTTPException, Depends, Response, Cookie
+from fastapi import FastAPI, Request, HTTPException, Depends, Response
 from config import settings as sett
 from typing import Optional
 from fastapi.responses import PlainTextResponse
 import services
-import jwt
-import time
 from asyncio import sleep, create_task
 from contextlib import asynccontextmanager
+from request_token_management import (check_request_counts, rate_limit, check_blocked,
+                                      request_counts, is_valid_token, delete_token, BLOCK_DURATION_SECONDS_TOKEN)
 
-SECRET_KEY = sett.SECRET_KEY
-# Diccionario para almacenar el recuento de solicitudes por número de celular
-request_counts = {}
-
-# Lista para almacenar los números de celular que han excedido el límite
-exceeded_numbers = set()
-
-BLOCK_DURATION_SECONDS_TOKEN = int(sett.BLOCK_DURATION_SECONDS_TOKEN) if sett.BLOCK_DURATION_SECONDS_TOKEN else 10
-# Límite de solicitudes por hora
-MAX_REQUESTS_PER_MINUTE = int(sett.MAX_REQUESTS_PER_MINUTE) if sett.MAX_REQUESTS_PER_MINUTE else 20
-BLOCK_DURATION_MINUTES_FOR_REQUEST = float(sett.BLOCK_DURATION_MINUTES_FOR_REQUEST) if sett.BLOCK_DURATION_MINUTES_FOR_REQUEST else 0.5
-        
-def generate_jwt(number):
-    payload = {
-        "number": number,
-        "exp": time.time() + (BLOCK_DURATION_SECONDS_TOKEN * 60)
-    }
-    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")    
-    
-# Función para verificar si un usuario está bloqueado
-def is_blocked(token):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return payload["exp"] > time.time()
-    except jwt.ExpiredSignatureError:
-        return False  # El token ha expirado, el usuario no está bloqueado
-    except jwt.InvalidTokenError:
-        return False  # Token inválido, el usuario no está bloqueado  
-
-def is_valid_token(token):
-    try:
-        # Decodificar y validar el token
-        jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return True  # El token es válido
-    except jwt.ExpiredSignatureError:
-        return False  # El token ha expirado
-    except jwt.InvalidTokenError:
-        return False  # El token no es válido
-
-async def delete_token(number):
-    try:
-        await sleep(30)
-        request_counts[number] = 0
-        print("El tiempo de espero a terminado.")
-        print(request_counts)
-    except Exception as e:
-        print(e)
-
-async def check_request_counts():
-    try:
-        
-        while True:
-            await sleep(BLOCK_DURATION_MINUTES_FOR_REQUEST * 60)
-            print("Verificando Solicitudes",request_counts)
-            request_counts.clear()
-            
-            # await sleep(20)
-            # print("Limpiando Solicitudes",request_counts)
-    except Exception as e:
-      print(e)
 
 @asynccontextmanager
 async def app_lifespan(app: FastAPI):
     try:
         # Inicializar el temporizador de desbloqueo para los números que ya están bloqueados
         print("Hola")
-        
+
         create_task(check_request_counts())
-            
-        yield 
-        
+
+        yield
+
     finally:
         # Limpiar los temporizadores y desbloquear los números al finalizar el contexto
         print("Fin")
 
 app = FastAPI(lifespan=app_lifespan)
-    
-async def rate_limit(request: Request):
-    try:
-        body = await request.json()
-        # Verificar si 'messages' está presente en el JSON
-        if body['entry'][0]['changes'][0]['value']['messages'][0]['from']:
-        # Ejecutar función para el json2
-            number = body['entry'][0]['changes'][0]['value']['messages'][0]['from']
-            numero_celular = number
-            # print("Dentro de el primer if de rate_limit")
-            request_count = request_counts.get(numero_celular, 0)
-            # Inicializar token como None
-            token = None
-            # Verificar si se ha excedido el límite de solicitudes
-            if request_count >= MAX_REQUESTS_PER_MINUTE:
-                print("verificando usuario: ",request_counts)
-                print("generando el token")
-                token = generate_jwt(numero_celular)      
-            # Actualizar el recuento de solicitudes del número de numero_celular
-            request_counts[numero_celular] = request_count + 1
-            # Retornar el token generado
-            return token
-        elif 'statuses' in body['entry'][0]['changes'][0]['value']:
-            # Si hay 'statuses' en el JSON, retornar None
-            pass
-        else:
-            # No se encuentra la clave 'messages', no hacer nada o manejar según sea necesario
-            pass
-    except KeyError as e:
-        return ("KeyError:", e)  # Manejar KeyError y retornar None si se produce uno
-    
-async def check_blocked(request: Request, response: Response):
-    token = request.cookies.get("token")
 
-    if is_valid_token(token) and is_blocked(token):
-        raise HTTPException(status_code=403, detail="Usuario bloqueado")
-    elif not token:
-        response.delete_cookie("token")  # Eliminar la cookie si no hay token
-        
-        
+
 @app.post('/whatsapp', dependencies=[Depends(rate_limit), Depends(check_blocked)])
-async def recibir_mensaje(request:Request, response:Response, token: str = Depends(rate_limit)):
+async def recibir_mensaje(request: Request, response: Response, token: str = Depends(rate_limit)):
     try:
-        
+
         body = await request.json()
-        
+
         entry = body['entry'][0]
         changes = entry['changes'][0]
         value = changes['value']
@@ -138,33 +40,36 @@ async def recibir_mensaje(request:Request, response:Response, token: str = Depen
         messageId = message['id']
         contacts = value['contacts'][0]
         name = contacts['profile']['name']
-        
+
         text = await services.obtener_Mensaje_whatsapp(message)
         timestamp = int(message['timestamp'])
         print("whatsapp: ", body)
-        print("token: " ,token)
+        print("token: ", token)
         print("Contando Solicitudes", request_counts)
-        
+
         if is_valid_token(token):
             # Configurar la cookie con el token
             # print("token valido")
-            response.set_cookie(key="token", value=token, expires=BLOCK_DURATION_SECONDS_TOKEN, httponly=True)
+            response.set_cookie(
+                key="token", value=token, expires=BLOCK_DURATION_SECONDS_TOKEN, httponly=True)
             print("services.bloquear")
             create_task(delete_token(number))
             await services.bloquear_usuario(text, number, messageId, name, timestamp)
-            raise HTTPException(status_code=403, detail="Usuario bloqueado") 
+            raise HTTPException(status_code=403, detail="Usuario bloqueado")
         else:
             print("services.administrar")
-            
+
             await services.administrar_chatbot(text, number, messageId, name, timestamp)
-            return 'EVENT_RECEIVED'   
-      
+            return 'EVENT_RECEIVED'
+
     except Exception as e:
         return HTTPException(status_code=500, detail=str(e))
-    
+
+
 @app.get("/")
 def home():
-    return {"hola":sett.token}
+    return {"hola": sett.token}
+
 
 @app.get("/whatsapp")
 async def verify_token(request: Request):
@@ -181,6 +86,6 @@ async def verify_token(request: Request):
             raise HTTPException(status_code=400, detail="Invalid request")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
+
 # if __name__ == "__main__":
 #     uvicorn.run(app, host="0.0.0.0", port=94)
