@@ -5,6 +5,8 @@ from config import settings as sett
 from uuid import uuid4
 import asyncio
 
+
+#OBTENEMOS LA IMAGEN QUE NOS ENVIA EL USUARIO DESDE WHATSAPP
 async def ObtenerIdImagen(image_id):
     url = f"https://graph.facebook.com/v19.0/{image_id}"
     whatsapp_token = sett.wsp_token
@@ -15,7 +17,7 @@ async def ObtenerIdImagen(image_id):
         imagen_url = data_json['url']
         return imagen_url
 
-
+#SE DESCARGA LA IMAGEN QUE EL USUARIO ENVIA DESDE WHATSAPP, 
 async def descargar_imagen(url, number):
     print(url)
     whatsapp_token = sett.wsp_token
@@ -33,20 +35,20 @@ async def descargar_imagen(url, number):
         with open(ruta_completa, "wb") as f:
             f.write(response.content)
 
-
+#SUMAMOS EL TOTAL DEL PEDIDO QUE NOS HAGA EL CLIENTE
 async def sumar_total_pedido(product_items):
     total = 0
     for item in product_items:
         total += item['item_price'] * item['quantity']
     return total
 
-
+#PROCESAMOS LA ORDEN DE PEDIDO DEL USUARIO Y ENVIAMOS EL TOTAL
 async def procesar_orden(order):
     total_pedido = await sumar_total_pedido(order['product_items'])
     return f'Orden recibida. Total del pedido: {total_pedido} {order["product_items"][0]["currency"]}'
 
-
-async def sendImage_Message(number, link, caption):
+#ENVIAMOS UNA IMAGEN DE NOSOTROS HACIA EL CLIENTE
+async def Enviar_Imagen_MSG(number, link, caption):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
@@ -59,7 +61,8 @@ async def sendImage_Message(number, link, caption):
     })
     return data
 
-async def buttonReply_Message(number, options, body, footer, sedd, messageId):
+#Enviamos un mensaje que contiene texto, footer y opciones
+async def ButtonOpciones_Responder_msg(number, options, body, footer, sedd, messageId):
     buttons = []
 
     for i, option in enumerate(options):
@@ -92,8 +95,8 @@ async def buttonReply_Message(number, options, body, footer, sedd, messageId):
     )
     return data
 
-
-async def ButtonImage_Message(number, body, footer, options, url_img):
+#enviamos una imagen con opciones
+async def ButtonImagenOpciones_Message(number, body, footer, options, url_img):
     id_base = "unique-postback-id-"
     accion = {
         "buttons": []
@@ -133,8 +136,8 @@ async def ButtonImage_Message(number, body, footer, options, url_img):
     })
     return data
 
-
-async def contact_Message(number):
+#ENVIAMOS CONTACTO AL USUARIO DE WHATSAPP
+async def ButtonContact_Message(number):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "to": number,
@@ -227,8 +230,8 @@ async def contact_Message(number):
     })
     return data
 
-
-async def textUrl_Message(number):
+#ENVIAMOS UN TEXTO MAS UNA URL PARA QUE NOS VAYAN A VISITAR
+async def Enviar_URLTexto_Message(number):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "to": number,
@@ -239,8 +242,8 @@ async def textUrl_Message(number):
     })
     return data
 
-
-async def document_Message(number, url, caption, filename):
+#ENVIAMOS DOCUMENTO PDF WORD ETC A USUARIO WHATSAPP
+async def Enviar_Document_Message(number, url, caption, filename):
     data = json.dumps(
         {
             "messaging_product": "whatsapp",
@@ -256,8 +259,8 @@ async def document_Message(number, url, caption, filename):
     )
     return data
 
-
-async def location_Message(number, messageId):
+#ENVIAMOS NUESTRA UBICACION AL USUARIO
+async def Ubicacion_Empresa_Message(number, messageId):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
@@ -275,8 +278,8 @@ async def location_Message(number, messageId):
     })
     return data
 
-
-async def listaDeOpciones_Message(number, body_text, header_text, footer_text, button_text, opciones):
+#ENVIAMOS UN MENSAJE INTERACTIVO DE HEADER, BODY FOOTER Y OPCIONES
+async def Enviar_Lista_Opciones_Message(number, body_text, header_text, footer_text, button_text, opciones):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
@@ -303,8 +306,8 @@ async def listaDeOpciones_Message(number, body_text, header_text, footer_text, b
     })
     return data
 
-
-async def ClientLocation_Message(number, body):
+#EL USUARIO NOS ENVIA SU UBICACION 
+async def Recibir_UbicacionCliente_Message(number, body):
 
     data = json.dumps({
         "messaging_product": "whatsapp",
@@ -324,7 +327,8 @@ async def ClientLocation_Message(number, body):
 
     return data
 
-async def catalogo_Message():
+#Enviamos el catalogo de nuestros productos de Facebook
+async def Enviar_CatalogoWSP_Message():
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
@@ -348,8 +352,8 @@ async def catalogo_Message():
     })
     return data
 
-
-async def catalgoWSP_Message(number, body, footer):
+#ENVIAMOS EL CATALOGO SIMPLE POR WHATSAPP 
+async def Enviar_CatalgoSimpleWSP_Message(number, body, footer):
     data = json.dumps(
         {
             "messaging_product": "whatsapp",
@@ -375,15 +379,15 @@ async def catalgoWSP_Message(number, body, footer):
     )
     return data
 
-
-async def preparar_mensajes(numero, messageId):
-    mensajes = ["¡Estamos encantados de darte la bienvenida a nuestra comunidad de clientes! Es un placer tenerte con nosotros en tu primera compra. 😊",
-                        "Queremos que sepas que ofrecemos una diversidad de opciones para asegurarnos de que encuentres exactamente lo que necesitas, adaptándonos a todo tipo de presupuestos. Ya sea que busques algo económico o estés buscando invertir en productos de calidad, tenemos lo justo para ti."
+#SI QUEREMOS ENVIAR VARIOS MENSAJES EN DISTINTOS BLOQUES
+async def Enviar_VariosMensajes_Message(numero, messageId):
+    mensajes = ["¡Estamos encantados de darte la bienvenida a nuestra comunidad de clientes! Es un placer tenerte con nosotros en tu primera compra. 😊","Queremos que sepas que ofrecemos una diversidad de opciones para asegurarnos de que encuentres exactamente lo que necesitas, adaptándonos a todo tipo de presupuestos. Ya sea que busques algo económico o estés buscando invertir en productos de calidad, tenemos lo justo para ti."
                         ]
-    tasks = [await text_Message(numero, mensaje, messageId) for mensaje in mensajes]
+    tasks = [await Enviar_MensajeIndividual_Message(numero, mensaje, messageId) for mensaje in mensajes]
     return tasks
 
-async def text_Message(number, text, messageId=None):
+#ENVIAMOS MENSAJES BASICOS(INDIVIDUAL)
+async def Enviar_MensajeIndividual_Message(number, text, messageId=None):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
@@ -399,7 +403,7 @@ async def text_Message(number, text, messageId=None):
     })
     return data
 
-
+#enviamos stickers
 async def sticker_Message(number, sticker_id):
     data = json.dumps(
         {
@@ -439,11 +443,14 @@ async def get_media_id(media_name, media_type):
     return media_id
 
 
-async def mostrar_menu(number, messageId, body, footer, options, sed):
-    replyButton_Data = await buttonReply_Message(
+#ENVIAMOS UN MENU, BODY, FOOTER Y OPCIONES CON UN MAXIMO DE 3 ITEMS
+async def Enviar_Menu_Message(number, messageId, body, footer, options, sed):
+    replyButton_Data = await ButtonOpciones_Responder_msg(
         number, options, body, footer, "sed"+sed, messageId)
     return replyButton_Data
 
+
+#marcamos los mensaje del usuario como leido
 async def markRead_Message(messageId):
     data = json.dumps(
         {

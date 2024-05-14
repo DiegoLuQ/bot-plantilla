@@ -74,9 +74,10 @@ async def obtener_Mensaje_whatsapp(message):
 async def bloquear_usuario(text, number, messageId, name, timestamp):
     list_for = []
 
-    def Enviar_Saludo_Bloqueo():
+    async def Enviar_Saludo_Bloqueo():
         body = "Disculpa🙏, parece que estoy un poco abrumado 🥱 por la cantidad de mensajes. Permíteme tomar un breve descanso de 30 segundos ⏳ para reorganizarme y estaré de vuelta contigo enseguida🏃💨. ¡Gracias por tu paciencia! 😊"
-        return text_Message(number=number, messageId=messageId, text=body)
+        data = await Enviar_MensajeIndividual_Message(number=number, messageId=messageId, text=body)
+        return data
     if text:
         list_for.append(Enviar_Saludo_Bloqueo())
 
@@ -91,7 +92,7 @@ async def enviar_mensaje_usuario(list_for):
 
 # Nuevo Forma
 async def ObtenerTotalDeOrden_msg(number, data_orden, messageId):
-    data = text_Message(number, data_orden, messageId)
+    data = await Enviar_MensajeIndividual_Message(number, data_orden, messageId)
     return data
 
 
@@ -101,14 +102,14 @@ async def EnviarMetodosDePagos_img_options(number):
     options = ["Transferencia", "Pago en Efectivo", "3er Opcion"]
     # aca deberia consultar en la db, en la tabla proceso de pagos, columna imagen y hacer la consulta con la id o numero
     url_img = "https://i.postimg.cc/PJPRZJBh/e35f9d3b-f59b-44ed-91e2-e6742799baad.png"
-    data = await ButtonImage_Message(number, body=body, footer=footer, options=options, url_img=url_img)
+    data = await ButtonImagenOpciones_Message(number, body=body, footer=footer, options=options, url_img=url_img)
     return data
 
 
 async def Datos_para_descargarImagen(number, imagen_id, messageId):
     img_url = await ObtenerIdImagen(imagen_id)
     await descargar_imagen(img_url, number)
-    data = text_Message(number, "Gracias por el screeshot", messageId)
+    data = await Enviar_MensajeIndividual_Message(number, "Gracias por el screeshot", messageId)
     return data
 
 
@@ -118,7 +119,7 @@ async def Descagar_pdf(number):
         caption = "PDF de nuestros filtros"
         filename = "Filtros - SF"
 
-        data = await document_Message(number, link, caption, filename)
+        data = await Enviar_Document_Message(number, link, caption, filename)
         return data
     except Exception as e:
         print(e)
@@ -128,7 +129,7 @@ async def Send_Catalogo_wsp(number):
     try:
         body = "Te presento nuestro catalogo"
         footer = "SF | santiagofiltros.cl"
-        data = await catalgoWSP_Message(number, body, footer)
+        data = await Enviar_CatalgoSimpleWSP_Message(number, body, footer)
         return data
     except Exception as e:
         print(e)
@@ -137,7 +138,7 @@ async def Send_Catalogo_wsp(number):
 async def RecibirUbicacion_Cliente(number):
     try:
         body = "Envianos tu dirección para ir a dejar tu pedido \n 👇"
-        data = await ClientLocation_Message(number, body)
+        data = await Recibir_UbicacionCliente_Message(number, body)
         return data
     except Exception as e:
         print(e)
@@ -199,7 +200,7 @@ async def Enviar_Lista_Productos(number):
         button_text = "Ver ☑️"
         opciones = lista_opciones
 
-        data = await listaDeOpciones_Message(number, body_text, header_text, footer_text, button_text, opciones)
+        data = await Enviar_Lista_Opciones_Message(number, body_text, header_text, footer_text, button_text, opciones)
         return data
     except Exception as e:
         print(e)
@@ -209,21 +210,21 @@ async def Enviar_Menu_Saludo(number, messageId):
     body = "Hola, ¡bienvenido a SF! ❤️ Soy tu asistente virtual Jack 24/7. Navega por nuestro menú, conoce más sobre SF 😎 y descubre cómo iniciar tu negocio con nosotros 🚀."
     footer = "Equipo SF"
     options = ["Catalogo", "Información", "Ventas"]
-    return await mostrar_menu(number, messageId, body, footer, options, sed="1")
+    return await Enviar_Menu_Message(number, messageId, body, footer, options, sed="1")
 
 
 async def Enviar_Menu_Catalogo(number, messageId):
     body = "Buena elección para revisar nuestros productos, te dejo aquí unas opciones"
     footer = "Productos SF"
     options = ["🗒️ Descargar PDF", "🤟 Lista de Productos", "😎 Catalogo WSP"]
-    return await mostrar_menu(number, messageId, body, footer, options, sed="2")
+    return await Enviar_Menu_Message(number, messageId, body, footer, options, sed="2")
 
 
 async def Enviar_Menu_Informacion(number, messageId):
     body = "Quieres saber más de nosotros?, te dejo aquí unas opciones"
     footer = "Información SF"
     options = ["Ubicación?", "Redes Sociales", "Tienen pagina web?"]
-    return await mostrar_menu(number, messageId, body, footer, options, sed="3")
+    return await Enviar_Menu_Message(number, messageId, body, footer, options, sed="3")
 
 
 async def Enviar_Menu_Ventas(number, messageId):
@@ -232,7 +233,7 @@ async def Enviar_Menu_Ventas(number, messageId):
     options = ["Contactar vendedor",
                "Tu primer negocio",
                "Consejos Utiles"]
-    data = await mostrar_menu(number, messageId, body, footer, options, sed="3")
+    data = await Enviar_Menu_Message(number, messageId, body, footer, options, sed="3")
     return data
 
 
@@ -241,7 +242,7 @@ async def Enviar_Mensaje_ButtonImagen(number):
     footer = "SF | Redes Sociales - FIX"
     options = ["Instagram", "Facebook", "TikTok"]
     url_img = "https://dinahosting.com/blog/upload/2022/07/tamanos-imagenes-redes-sociales-2024_dinahosting.png"
-    data = await ButtonImage_Message(number, body, footer, options, url_img)
+    data = await ButtonImagenOpciones_Message(number, body, footer, options, url_img)
     return data
         
 async def Enviar_Menu_PrimerNegocio(number):
@@ -249,25 +250,25 @@ async def Enviar_Menu_PrimerNegocio(number):
     footer = "SF | Gracias por preferirnos ♥"
     options = ["Soy Cliente", "Primera Compra", "Ayuda PDF"]
     url_img = "https://i.postimg.cc/PJPRZJBh/e35f9d3b-f59b-44ed-91e2-e6742799baad.png"
-    data = await ButtonImage_Message(number, body, footer, options, url_img)
+    data = await ButtonImagenOpciones_Message(number, body, footer, options, url_img)
     return data
 
 async def Enviar_MiUbicacion(number, messageId):
     try:
-        data = await location_Message(number, messageId)
+        data = await Ubicacion_Empresa_Message(number, messageId)
         return data
     except Exception as e:
         print(e)
 
 
 async def Mensaje_Contactar_Vendedor(number):
-    data = await contact_Message(number)
+    data = await ButtonContact_Message(number)
     return data
 
 
 async def Enviar_TienenPaginaWeb(number):
     try:
-        data = await textUrl_Message(number)
+        data = await Enviar_URLTexto_Message(number)
         return data
     except Exception as e:
         print(e)
@@ -306,24 +307,24 @@ async def Mensaje_Primera_Compra(number):
     footer_text = "SF | Calidad y Confianza"
     button_text = "Ver Presupuestos 😎"
     opciones = lista_opciones
-    data = await listaDeOpciones_Message(number, body_text=body_text, header_text=header_text, footer_text=footer_text, button_text=button_text,opciones=opciones)
+    data = await Enviar_Lista_Opciones_Message(number, body_text=body_text, header_text=header_text, footer_text=footer_text, button_text=button_text,opciones=opciones)
     return data
 
 async def SinContext(number, messageId):     
     body = "No tengo ese comando en mi sistema, dime como puedo ayudarte?"
     footer = "Equipo SF | santiagofiltros.cl"
     options = ["Catalogo", "Información", "Tu Negocio"]
-    data = buttonReply_Message(number, options, body, footer, "sed7", messageId)
+    data = await ButtonOpciones_Responder_msg(number, options, body, footer, "sed7", messageId)
     return data
 
 async def Enviar_Imagenes(number):
     link = "https://i.postimg.cc/4xzJdjY2/Personal-Portafolio.jpg"
     caption = "Enviamos esta imagen para su conocimiento"
-    data = await sendImage_Message(number, link, caption)
+    data = await Enviar_Imagen_MSG(number, link, caption)
     return data
 
 async def Mensaje_Rapido(number, messageId, mensaje=None):
-    return text_Message(number, mensaje, messageId)
+    return await Enviar_MensajeIndividual_Message(number, mensaje, messageId)
 
 async def administrar_chatbot(text, number, messageId, name, timestamp):
     # print(type(text))
@@ -392,7 +393,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp):
             pass
 
         elif text in "primera compra":
-            tasks = await preparar_mensajes(number, messageId)
+            tasks = await Enviar_VariosMensajes_Message(number, messageId)
             data = await Mensaje_Primera_Compra(number)
             
             for task in tasks:
