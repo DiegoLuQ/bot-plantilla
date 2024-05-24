@@ -356,13 +356,9 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
     list_for = []
     text_2 = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
     text = text_2.lower().replace(" ", "_")
-    
-    
-    
-    
     db_manager = DatabaseManager()
-    flujo = await db_manager.get_flujo_menu()
     print("user: ",text)
+    flujo = await db_manager.get_flujo_menu()
 
     # PODRIAMOS MEJORARLO CONSULTANDO A REDIS
     planes = { 

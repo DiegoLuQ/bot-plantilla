@@ -48,7 +48,7 @@ async def recibir_mensaje(request: Request, response: Response, token: str = Dep
         
 
         
-        # print("whatsapp: ", body)
+        print("whatsapp: ", body)
         # print("token: ", token)
         # print("Contando Solicitudes", request_counts)
 
