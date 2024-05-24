@@ -209,7 +209,7 @@ async def Enviar_Lista_Productos(number):
 
 
 async def Enviar_Flujo_Menu(number, flujo_menu, text, payload=None):
-    await guardar_datos_db(payload)
+    # await guardar_datos_db(payload)
     if flujo_menu:
         # Construir el mensaje con los datos recuperados
         body = flujo_menu["flujo_menu"][text]["body"]

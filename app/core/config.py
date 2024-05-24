@@ -34,8 +34,10 @@ class Settings:
     #DB MYSQL
     DB_MYSQL = environ.get("DB_MYSQL")
     DB_MONGO = environ.get("DB_MONGO")
-    
+    DB_MONGO_COMPAS = environ.get("DB_MONGO_COMPAS")
     DB_MONGODOCKER=environ.get("DB_MONGODOCKER")
+    DB_MONGO_LOCAL=environ.get("DB_MONGO_LOCAL")
+    
     DB_REDIS=environ.get("DB_REDIS")
     DB_REDIS_PORT=environ.get("DB_REDIS_PORT")
     
