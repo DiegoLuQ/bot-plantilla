@@ -1,5 +1,5 @@
 from fastapi import Request, Response, HTTPException
-from config import settings as sett
+from .config import settings as sett
 import asyncio
 import jwt
 import time

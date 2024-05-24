@@ -2,7 +2,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from os import environ
 
-
+"""
+TENEMOS CONFIGURADO NUESTRAS VARIABLES DE ENTORNO
+"""
 
 env_path = Path('.') / '.env'
 
@@ -21,10 +23,24 @@ class Settings:
     MAX_REQUESTS_PER_MINUTE = environ.get("MAX_REQUESTS_PER_MINUTE")
     BLOCK_DURATION_MINUTES_FOR_REQUEST = environ.get("BLOCK_DURATION_MINUTES_FOR_REQUEST")
     
+    #REDIS
+    DURATION_REDIS_FLUJO = environ.get("DURATION_REDIS_FLUJO")
+    
     # Admin para enviar informes
     NUMERO_ADMIN = environ.get("NUMERO_ADMIN")
     TIEMPO_PARA_ENVIAR_MSG_7DIAS = environ.get('TIEMPO_PARA_ENVIAR_MSG_7DIAS')
     TIEMPO_PARA_ENVIAR_MSG_30SEG = environ.get('TIEMPO_PARA_ENVIAR_MSG_30SEG')
+    
+    #DB MYSQL
+    DB_MYSQL = environ.get("DB_MYSQL")
+    DB_MONGO = environ.get("DB_MONGO")
+    
+    DB_MONGODOCKER=environ.get("DB_MONGODOCKER")
+    DB_REDIS=environ.get("DB_REDIS")
+    DB_REDIS_PORT=environ.get("DB_REDIS_PORT")
+    
+    #FACEBOOK
+    FB_URL  = environ.get("FB_URL")
     
     stickers = {
     "mort":381731608015965,

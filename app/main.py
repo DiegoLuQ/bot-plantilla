@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Request, HTTPException, Depends, Response
-from config import settings as sett
-from typing import Optional
+from core.config import settings as sett
 from fastapi.responses import PlainTextResponse
-import services
-from asyncio import sleep, create_task
+import lianbot_services as services
+import re
+from asyncio import create_task
 from contextlib import asynccontextmanager
-from request_token_management import (check_request_counts, rate_limit, check_blocked,
+from core.request_token_management import (check_request_counts, rate_limit, check_blocked,
                                       request_counts, is_valid_token, delete_token, BLOCK_DURATION_SECONDS_TOKEN)
 
 
@@ -32,20 +32,25 @@ async def recibir_mensaje(request: Request, response: Response, token: str = Dep
 
         body = await request.json()
 
+        display_number = body['entry'][0]['changes'][0]['value']['metadata']['display_phone_number']
         entry = body['entry'][0]
         changes = entry['changes'][0]
         value = changes['value']
         message = value['messages'][0]
         number = message['from']
         messageId = message['id']
+        
         contacts = value['contacts'][0]
         name = contacts['profile']['name']
 
         text = await services.obtener_Mensaje_whatsapp(message)
         timestamp = int(message['timestamp'])
-        print("whatsapp: ", body)
-        print("token: ", token)
-        print("Contando Solicitudes", request_counts)
+        
+
+        
+        # print("whatsapp: ", body)
+        # print("token: ", token)
+        # print("Contando Solicitudes", request_counts)
 
         if is_valid_token(token):
             # Configurar la cookie con el token
@@ -54,12 +59,12 @@ async def recibir_mensaje(request: Request, response: Response, token: str = Dep
                 key="token", value=token, expires=BLOCK_DURATION_SECONDS_TOKEN, httponly=True)
             print("services.bloquear")
             create_task(delete_token(number))
-            await services.bloquear_usuario(text, number, messageId, name, timestamp)
+            await services.bloquear_usuario(text, number, messageId, name, timestamp, display_number)
             raise HTTPException(status_code=403, detail="Usuario bloqueado")
         else:
             print("services.administrar")
 
-            await services.administrar_chatbot(text, number, messageId, name, timestamp)
+            await services.administrar_chatbot(text, number, messageId, name, timestamp, display_number)
             return 'EVENT_RECEIVED'
 
     except Exception as e:

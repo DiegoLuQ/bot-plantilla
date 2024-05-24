@@ -1,14 +1,14 @@
 import os
 import json
 import httpx
-from config import settings as sett
+from .config import settings as sett
 from uuid import uuid4
 import asyncio
 
 
 #OBTENEMOS LA IMAGEN QUE NOS ENVIA EL USUARIO DESDE WHATSAPP
 async def ObtenerIdImagen(image_id):
-    url = f"https://graph.facebook.com/v19.0/{image_id}"
+    url = f"{sett.FB_URL}/v19.0/{image_id}"
     whatsapp_token = sett.wsp_token
     async with httpx.AsyncClient() as client:
         headers = {"Authorization": f"Bearer {whatsapp_token}"}
@@ -62,14 +62,14 @@ async def Enviar_Imagen_MSG(number, link, caption):
     return data
 
 #Enviamos un mensaje que contiene texto, footer y opciones
-async def ButtonOpciones_Responder_msg(number, options, body, footer, sedd, messageId):
+async def ButtonOpciones_Responder_msg(number, options, body, footer, sed, messageId=None):
     buttons = []
 
     for i, option in enumerate(options):
         buttons.append({
             "type": "reply",
             "reply": {
-                "id": sedd + "_btn_" + str(i+1),
+                "id": sed + "_btn_" + str(i+1),
                 "title": option
             }
         })
@@ -231,13 +231,13 @@ async def ButtonContact_Message(number):
     return data
 
 #ENVIAMOS UN TEXTO MAS UNA URL PARA QUE NOS VAYAN A VISITAR
-async def Enviar_URLTexto_Message(number):
+async def Enviar_URLTexto_Message(number, body):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "to": number,
         "text": {
             "preview_url": True,
-            "body": "Claro que si!, Visitanos en https://santiagofiltros.cl para ayudarte en tu negocio, no dudes en llamarnos!"
+            "body": body
         }
     })
     return data
@@ -259,8 +259,9 @@ async def Enviar_Document_Message(number, url, caption, filename):
     )
     return data
 
+
 #ENVIAMOS NUESTRA UBICACION AL USUARIO
-async def Ubicacion_Empresa_Message(number, messageId):
+async def Ubicacion_Empresa_Message(number, messageId, name, address):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
@@ -272,14 +273,14 @@ async def Ubicacion_Empresa_Message(number, messageId):
         "location": {
             "latitude": -20.273872272525107,
             "longitude": -70.09637463862305,
-            "name": "Santiago Filtros",
-            "address": "Argentina 3086"
+            "name": name,
+            "address": address
         },
     })
     return data
 
 #ENVIAMOS UN MENSAJE INTERACTIVO DE HEADER, BODY FOOTER Y OPCIONES
-async def Enviar_Lista_Opciones_Message(number, body_text, header_text, footer_text, button_text, opciones):
+async def Enviar_Lista_Opciones_Message(number, body, header, footer, button, options):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
@@ -289,17 +290,17 @@ async def Enviar_Lista_Opciones_Message(number, body_text, header_text, footer_t
             "type": "list",
             "header": {
                 "type": "text",
-                "text": header_text
+                "text": header
             },
             "body": {
-                "text": body_text
+                "text": body
             },
             "footer": {
-                "text": footer_text
+                "text": footer
             },
             "action": {
-                "button": button_text,
-                "sections": opciones
+                "button": button,
+                "sections": options
 
             }
         }
@@ -328,32 +329,37 @@ async def Recibir_UbicacionCliente_Message(number, body):
     return data
 
 #Enviamos el catalogo de nuestros productos de Facebook
-async def Enviar_CatalogoWSP_Message():
+async def Enviar_CatalogoWSP_Message(number, body, idProductoCatalogo, footer):
+    number = "56961227637"
+    body = "Descubre nuestra gama de filtros para vehículos 🚗: calidad y rendimiento para mantener tu motor en óptimas condiciones. ¡Echa un vistazo ahora!"
+    idProductoCatalogo = "svtr266tw9"
+    footer = "Best grocery deals on WhatsApp!"
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
-        "to": "56961227637",
+        "to": number,
         "type": "interactive",
         "interactive": {
             "type": "catalog_message",
             "body": {
-                "text": "Descubre nuestra gama de filtros para vehículos 🚗: calidad y rendimiento para mantener tu motor en óptimas condiciones. ¡Echa un vistazo ahora!"
+                "text": body
             },
             "action": {
                 "name": "catalog_message",
                 "parameters": {
-                    "thumbnail_product_retailer_id": "svtr266tw9"
+                    "thumbnail_product_retailer_id": idProductoCatalogo
                 }
             },
             "footer": {
-                "text": "Best grocery deals on WhatsApp!"
+                "text": footer
             }
         }
     })
     return data
 
 #ENVIAMOS EL CATALOGO SIMPLE POR WHATSAPP 
-async def Enviar_CatalgoSimpleWSP_Message(number, body, footer):
+async def Enviar_CatalgoSimpleWSP_Message(number, body, footer, idProductoCatalogo):
+    
     data = json.dumps(
         {
             "messaging_product": "whatsapp",
@@ -368,7 +374,7 @@ async def Enviar_CatalgoSimpleWSP_Message(number, body, footer):
                 "action": {
                     "name": "catalog_message",
                     "parameters": {
-                        "thumbnail_product_retailer_id": "svtr266tw9"
+                        "thumbnail_product_retailer_id": idProductoCatalogo
                     }
                 },
                 "footer": {
@@ -445,8 +451,7 @@ async def get_media_id(media_name, media_type):
 
 #ENVIAMOS UN MENU, BODY, FOOTER Y OPCIONES CON UN MAXIMO DE 3 ITEMS
 async def Enviar_Menu_Message(number, messageId, body, footer, options, sed):
-    replyButton_Data = await ButtonOpciones_Responder_msg(
-        number, options, body, footer, "sed"+sed, messageId)
+    replyButton_Data = await ButtonOpciones_Responder_msg(number, options, body, footer, sed=sed, messageId=messageId)
     return replyButton_Data
 
 

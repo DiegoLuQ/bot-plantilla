@@ -12,6 +12,7 @@ link_y_notas.md
 main_bloqueode_numero.py
 # Distribution / packaging
 .Python
+API-WSP-PERSONAL.py
 build/
 develop-eggs/
 dist/

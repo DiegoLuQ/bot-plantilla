@@ -3,6 +3,7 @@ import json
 from core.config import settings as sett
 from core.whatsapp_messaging import *
 from asyncio import sleep
+from database import DatabaseManager
 
 
 async def guardar_datos_db(data):
@@ -11,7 +12,7 @@ async def guardar_datos_db(data):
         headers = {'Content-Type': 'application/json'}
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"{sett.DB_MYSQL}/v1/user_wsp/register_user", headers=headers, data=data)
+            response = await client.post(f"{sett.DB_MONGO}/v1/user/usuarios/", headers=headers, data=data)
 
         if response.status_code == 200:
             return 'mensaje guardado', 200
@@ -71,11 +72,11 @@ async def obtener_Mensaje_whatsapp(message):
     return text
 
 
-async def bloquear_usuario(text, number, messageId, name, timestamp):
+async def bloquear_usuario(text, number, messageId, name, timestamp, display_number=None):
     list_for = []
 
     async def Enviar_Saludo_Bloqueo():
-        body = "Disculpa🙏, parece que estoy un poco abrumado 🥱 por la cantidad de mensajes. Permíteme tomar un breve descanso de 30 segundos ⏳ para reorganizarme y estaré de vuelta contigo enseguida🏃💨. ¡Gracias por tu paciencia! 😊"
+        body = F"Disculpa🙏, parece que estoy un poco abrumado 🥱 por la cantidad de mensajes. Permíteme tomar un breve descanso de {sett.BLOCK_DURATION_SECONDS_TOKEN} segundos ⏳ para reorganizarme y estaré de vuelta contigo enseguida🏃💨. ¡Gracias por tu paciencia! 😊"
         data = await Enviar_MensajeIndividual_Message(number=number, messageId=messageId, text=body)
         return data
     if text:
@@ -207,37 +208,50 @@ async def Enviar_Lista_Productos(number):
         print(e)
 
 
-async def Enviar_Menu_Saludo(number, messageId):
-    body = "Hola, ¡bienvenido a SF! ❤️ Soy tu asistente virtual Jack 24/7. Navega por nuestro menú, conoce más sobre SF 😎 y descubre cómo iniciar tu negocio con nosotros 🚀."
-    footer = "Equipo SF"
-    options = ["Catalogo", "Información", "Ventas"]
-    return await ButtonOpciones_Responder_msg(number, messageId, body, footer, options, sed="1")
+async def Enviar_Flujo_Menu(number, flujo_menu, text, payload=None):
+    await guardar_datos_db(payload)
+    if flujo_menu:
+        # Construir el mensaje con los datos recuperados
+        body = flujo_menu["flujo_menu"][text]["body"]
+        footer = flujo_menu["flujo_menu"][text]["footer"]
+        options = flujo_menu["flujo_menu"][text]["options"]
+        sed = flujo_menu["flujo_menu"][text]["sed"]
+
+        return await ButtonOpciones_Responder_msg(number, options, body, footer, sed)
+    else:
+        print("error en la db")
 
 
-async def Enviar_Menu_Catalogo(number, messageId):
-    body = "Buena elección para revisar nuestros productos, te dejo aquí unas opciones"
-    footer = "Productos SF"
-    options = ["🗒️ Descargar PDF", "🤟 Lista de Productos", "😎 Catalogo WSP"]
-    return await ButtonOpciones_Responder_msg(number, messageId, body, footer, options, sed="2")
+async def Enviar_Lista_Servicios(number, flujo_list, text, payload=None):
+    await guardar_datos_db(payload)
+    if flujo_list:
+        options = flujo_list['widget_list'][text]['options']
+        body = flujo_list['widget_list'][text]['body']
+        header = flujo_list['widget_list'][text]['header']
+        footer = flujo_list['widget_list'][text]['footer']
+        button = flujo_list['widget_list'][text]['button']
+
+        data = await Enviar_Lista_Opciones_Message(number, body, header, footer, button, options)
+        return data
 
 
-async def Enviar_Menu_Informacion(number, messageId):
-    body = "Quieres saber más de nosotros?, te dejo aquí unas opciones"
-    footer = "Información SF"
-    options = ["Ubicación?", "Redes Sociales", "Tienen pagina web?"]
-    return await ButtonOpciones_Responder_msg(number, messageId, body, footer, options, sed="3")
+async def Enviar_ButtonImagen(number, flujo, text, payload=None):
+    await guardar_datos_db(payload)
+    if flujo:
+        body = flujo['flujo_submenu'][text]['body']
+        footer = flujo['flujo_submenu'][text]['footer']
+        options = flujo['flujo_submenu'][text]['options']
+        link = flujo['flujo_submenu'][text]['link']
+        options = flujo['flujo_submenu'][text]['options']
+        data = await ButtonImagenOpciones_Message(number, body, footer, options, link)
+        return data
 
 
-async def Enviar_Menu_Ventas(number, messageId):
-    body = "Emprende junto a nostros! 🤟, te dejo aquí unas opciones"
-    footer = "Emprendiendo con SF"
-    options = ["Contactar vendedor",
-               "Tu primer negocio",
-               "Consejos Utiles"]
-    data = await ButtonOpciones_Responder_msg(number, messageId, body, footer, options, sed="3")
-    return data
+async def Enviar_Ubicacion(number, flujo, messageId):
+    pass
 
 
+# deprecado
 async def Enviar_Mensaje_ButtonImagen(number):
     body = "Te presento nuestras redes sociales, no olvides seguirnos para enterarte de ofertas y promociones del día"
     footer = "SF | Redes Sociales - FIX"
@@ -255,7 +269,7 @@ async def Enviar_Menu_PrimerNegocio(number):
     data = await ButtonImagenOpciones_Message(number, body, footer, options, url_img)
     return data
 
-
+# deprecado
 async def Enviar_MiUbicacion(number, messageId):
     name = "SF | santiagofiltros.cl"
     address = "Argentina XXXX"
@@ -274,7 +288,7 @@ async def Mensaje_Contactar_Vendedor(number):
 async def Enviar_TienenPaginaWeb(number):
     body = "Claro que si!, Visitanos en https://santiagofiltros.cl para ayudarte en tu negocio, no dudes en llamarnos!"
     try:
-        data = await Enviar_URLTexto_Message(number)
+        data = await Enviar_URLTexto_Message(number, body)
         return data
     except Exception as e:
         print(e)
@@ -337,107 +351,109 @@ async def Mensaje_Rapido(number, messageId, mensaje=None):
     return await Enviar_MensajeIndividual_Message(number, mensaje, messageId)
 
 
-async def administrar_chatbot(text, number, messageId, name, timestamp):
-    # print(type(text))
+import unicodedata
+async def administrar_chatbot(text, number, messageId, name, timestamp, display_number=None):
     list_for = []
-    lista_privada = ["hola", "admin"]
+    text_2 = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
+    text = text_2.lower().replace(" ", "_")
+    
+    
+    
+    
+    db_manager = DatabaseManager()
+    flujo = await db_manager.get_flujo_menu()
+    print("user: ",text)
 
-    if 'product_items' in text:
-        data_orden = await procesar_orden(text)
-        list_for.append(await EnviarMetodosDePagos_img_options(number))
-        list_for.append(await ObtenerTotalDeOrden_msg(number, data_orden, messageId))
+    # PODRIAMOS MEJORARLO CONSULTANDO A REDIS
+    planes = { 
+        "personal_cod:lp1":Enviar_ButtonImagen,
+        "pyme_cod:lp2":Enviar_ButtonImagen,
+        "pro_cod:lp3":Enviar_ButtonImagen,
+        "personal_cod:pw1":Enviar_ButtonImagen,
+        "Pyme cod:pw2":Enviar_ButtonImagen,
+        "basico_cod:cb1":Enviar_ButtonImagen,
+        "pro_cod:cb2":Enviar_ButtonImagen,
+        "avanzado_cod:cb3":Enviar_ButtonImagen,
+        "hola": Enviar_Flujo_Menu,
+        "servicios": Enviar_Flujo_Menu,
+        "informacion": Enviar_Flujo_Menu,
+        "pagina_web": Enviar_Lista_Servicios,
+        "landing_page": Enviar_Lista_Servicios,
+        "chatbot": Enviar_Lista_Servicios
+    }
+    payload = json.dumps({
+            "wsp_text": str(text),
+            "wsp_name": name,
+            "wsp_number": str(number),
+            "wsp_wamid": messageId,
+            "wsp_timestamp": str(timestamp),
+            "wsp_display_phone_number": display_number
+            
+        })
+    # FLUJO DE MENUS
+    if text in planes:
+        list_for.append(await planes[text](number, flujo, text, payload))
+        
+    # INFORMACION
+    elif text in "ubicación?":
+        list_for.append(await Enviar_MiUbicacion(number, messageId))
+    elif "enviar ubicación" in text:
+        list_for.append(await RecibirUbicacion_Cliente(number))
+    elif "lista de productos" in text:
+        list_for.append(await Enviar_Lista_Productos(number))
+    # CREAR LOS ENLACES QUE LLEVEN AL USUARIO A BUSCAR LOS FILTROS www.santiagofitlros.cl/filtros/filtros-de-aire
+    # Información
 
-    elif 'mime_type' in text:
-        imagen_id = text['id']
-        # enviamos la id obtenenida del json
-        list_for.append(await Datos_para_descargarImagen(imagen_id, number, messageId))
+    elif text in "redes sociales":
+        list_for.append(await Enviar_Mensaje_ButtonImagen(number))
+
+    elif text in "tienen pagina web?":
+        list_for.append(await Enviar_TienenPaginaWeb(number))
+    elif text in "contactar vendedor":
+        list_for.append(await Mensaje_Contactar_Vendedor(number))
+
+    # TU PRIMER NEGOCIO
+    elif text in "tu primer negocio":
+        list_for.append(await Enviar_Menu_PrimerNegocio(number))
+
+    elif text in "soy cliente":
+        pass
+
+    elif text in "primera compra":
+        tasks = await Enviar_VariosMensajes_Message(number, messageId)
+        data = await Mensaje_Primera_Compra(number)
+
+        for task in tasks:
+            list_for.append(task)
+        list_for.append(data)
+
+    elif text in "100.000-300.000":
+        data = await Mensaje_Rapido(number, messageId, mensaje="Descubre cómo tu negocio puede beneficiarse de nuestra selección de filtros con precios especiales al por mayor, ideales para pequeñas empresas o talleres que están comenzando. Al elegir esta opción, recibirás un PDF detallado con una propuesta de precios diseñada para optimizar tu inversión inicial.")
+        list_for.append(data)
+    elif text in "300.001-500.000":
+        list_for.append(await Mensaje_Rapido(number, messageId, "Para empresas en crecimiento, ofrecemos un rango de precios competitivos que se ajusta a tus necesidades de expansión. Seleccionando este nivel, te enviaremos un PDF con una estructura de precios al por mayor que te permitirá escalar tu negocio manteniendo un equilibrio entre calidad y coste."))
+
+    elif text in "CLP500.001-700.000":
+        list_for.append(await Mensaje_Rapido(number, messageId, "Empresas establecidas encontrarán en este rango una oportunidad para fortalecer su cadena de suministro con nuestros filtros de alto rendimiento a precios preferenciales. El PDF que recibirás como parte de esta opción refleja una estrategia de precios pensada para socios comprometidos con la calidad y la eficiencia."))
+
+    elif text in "CLP700.001-XXX.XXX":
+        list_for.append(await Mensaje_Rapido(number, messageId, "Dirigido a líderes de la industria y grandes flotas, este rango ofrece el mejor valor con precios exclusivos al por mayor para pedidos de gran volumen. Al optar por esta categoría, el PDF proporcionado incluirá una oferta personalizada que reconoce y recompensa tu inversión y fidelidad a largo plazo con SF."))
+
+    # OTROS MENSAJES
+    elif text in "gracias":
+        list_for.append(await Mensaje_Rapido(number, messageId, "Estamos para ayudarte 🤓", ))
+
+    elif text in ["chao", "hasta luego"]:
+        list_for.append(await Mensaje_Rapido(number, messageId, "Estamos para ayudarte 🤓", ))
+
+    elif text in "ok":
+        list_for.append(await Mensaje_Rapido(number, messageId, "😎"))
+
+    elif text in "como es el local?":
+
+        list_for.append(await Enviar_Imagenes)
 
     else:
-        text = text.lower()
-        payload = json.dumps({
-            "wsp_name": name,
-            "wsp_number": number,
-            "wsp_timestamp": timestamp,
-            "wsp_text": text,
-            "wsp_messageid": messageId
-        })
-        print(f"Mensaje del usuario {name}:", text)
-        if text in "hola":
-
-            # await guardar_datos_db(payload)
-            list_for.append(await Enviar_Menu_Saludo(number, messageId))
-        elif "img_send" in text:  # enviamos una imagen
-            list_for.append(await Enviar_Imagenes(number))
-
-        # CATALOGO
-        elif "catalogo" in text:
-            list_for.append(await Enviar_Menu_Catalogo(number, messageId))
-        elif "descargar pdf" in text:
-            list_for.append(await Descagar_pdf(number))
-        elif "cawsp" in text:
-            list_for.append(await Send_Catalogo_wsp(number))
-        elif "enviar ubicación" in text:
-            list_for.append(await RecibirUbicacion_Cliente(number))
-        elif "lista de productos" in text:
-            list_for.append(await Enviar_Lista_Productos(number))
-        # CREAR LOS ENLACES QUE LLEVEN AL USUARIO A BUSCAR LOS FILTROS www.santiagofitlros.cl/filtros/filtros-de-aire
-        # Información
-        elif text in "información":
-            list_for.append(await Enviar_Menu_Informacion(number, messageId))
-        elif text in "redes sociales":
-            list_for.append(await Enviar_Mensaje_ButtonImagen(number))
-        elif text in "ubicación?":
-            list_for.append(await Enviar_MiUbicacion(number, messageId))
-        elif text in "tienen pagina web?":
-            list_for.append(await Enviar_TienenPaginaWeb(number))
-        # TU NEGOCIO
-        elif text in "ventas":
-            list_for.append(await Enviar_Menu_Ventas(number, messageId))
-        elif text in "contactar vendedor":
-            list_for.append(await Mensaje_Contactar_Vendedor(number))
-
-        # TU PRIMER NEGOCIO
-        elif text in "tu primer negocio":
-            list_for.append(await Enviar_Menu_PrimerNegocio(number))
-
-        elif text in "soy cliente":
-            pass
-
-        elif text in "primera compra":
-            tasks = await Enviar_VariosMensajes_Message(number, messageId)
-            data = await Mensaje_Primera_Compra(number)
-
-            for task in tasks:
-                list_for.append(task)
-            list_for.append(data)
-
-        elif text in "100.000-300.000":
-            data = await Mensaje_Rapido(number, messageId, mensaje="Descubre cómo tu negocio puede beneficiarse de nuestra selección de filtros con precios especiales al por mayor, ideales para pequeñas empresas o talleres que están comenzando. Al elegir esta opción, recibirás un PDF detallado con una propuesta de precios diseñada para optimizar tu inversión inicial.")
-            list_for.append(data)
-        elif text in "300.001-500.000":
-            list_for.append(await Mensaje_Rapido(number, messageId, "Para empresas en crecimiento, ofrecemos un rango de precios competitivos que se ajusta a tus necesidades de expansión. Seleccionando este nivel, te enviaremos un PDF con una estructura de precios al por mayor que te permitirá escalar tu negocio manteniendo un equilibrio entre calidad y coste."))
-
-        elif text in "CLP500.001-700.000":
-            list_for.append(await Mensaje_Rapido(number, messageId, "Empresas establecidas encontrarán en este rango una oportunidad para fortalecer su cadena de suministro con nuestros filtros de alto rendimiento a precios preferenciales. El PDF que recibirás como parte de esta opción refleja una estrategia de precios pensada para socios comprometidos con la calidad y la eficiencia."))
-
-        elif text in "CLP700.001-XXX.XXX":
-            list_for.append(await Mensaje_Rapido(number, messageId, "Dirigido a líderes de la industria y grandes flotas, este rango ofrece el mejor valor con precios exclusivos al por mayor para pedidos de gran volumen. Al optar por esta categoría, el PDF proporcionado incluirá una oferta personalizada que reconoce y recompensa tu inversión y fidelidad a largo plazo con SF."))
-
-        # OTROS MENSAJES
-        elif text in "gracias":
-            list_for.append(await Mensaje_Rapido(number, messageId, "Estamos para ayudarte 🤓", ))
-
-        elif text in ["chao", "hasta luego"]:
-            list_for.append(await Mensaje_Rapido(number, messageId, "Estamos para ayudarte 🤓", ))
-
-        elif text in "ok":
-            list_for.append(await Mensaje_Rapido(number, messageId, "😎"))
-
-        elif text in "como es el local?":
-
-            list_for.append(await Enviar_Imagenes)
-
-        else:
-            list_for.append(await SinContext(number, messageId))
+        list_for.append(await SinContext(number, messageId))
 
     return await enviar_mensaje_usuario(list_for)
