@@ -37,7 +37,7 @@ class Settings:
     DB_MONGO_COMPAS = environ.get("DB_MONGO_COMPAS")
     DB_MONGODOCKER=environ.get("DB_MONGODOCKER")
     DB_MONGO_LOCAL=environ.get("DB_MONGO_LOCAL")
-    
+    API_WSP_MONGO=environ.get("API_WSP_MONGO")
     DB_REDIS=environ.get("DB_REDIS")
     DB_REDIS_PORT=environ.get("DB_REDIS_PORT")
     

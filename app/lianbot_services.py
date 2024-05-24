@@ -12,7 +12,7 @@ async def guardar_datos_db(data):
         headers = {'Content-Type': 'application/json'}
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"{sett.DB_MONGO_COMPAS}/v1/user/usuarios/", headers=headers, data=data)
+            response = await client.post(f"{sett.API_WSP_MONGO}/v1/user/usuarios/", headers=headers, data=data)
 
         if response.status_code == 200:
             return 'mensaje guardado', 200

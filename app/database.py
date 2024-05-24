@@ -45,7 +45,6 @@ class DatabaseManager:
             flujo_menu = await conn['menu_col'].find_one({"numero_celular": number})
 
             if flujo_menu:
-                print(flujo_menu)
                 # Almacenar el valor en Redis antes de devolverlo
                 self.cache.set(number, json.dumps(flujo_menu))
                 duration = int(sett.DURATION_REDIS_FLUJO if sett.DURATION_REDIS_FLUJO else 3600)
