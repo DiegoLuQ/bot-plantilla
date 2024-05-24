@@ -46,9 +46,9 @@ class DatabaseManager:
 
             if flujo_menu:
                 # Almacenar el valor en Redis antes de devolverlo
-                self.cache.set(number, json.dumps(flujo_menu))
-                duration = int(sett.DURATION_REDIS_FLUJO if sett.DURATION_REDIS_FLUJO else 3600)
-                self.cache.expire(number, duration)
+                # self.cache.set(number, json.dumps(flujo_menu))
+                # duration = int(sett.DURATION_REDIS_FLUJO if sett.DURATION_REDIS_FLUJO else 3600)
+                # self.cache.expire(number, duration)
                 print("Flujo de menú recuperado de la base de datos y guardado en caché")
                 return flujo_menu
             else:
