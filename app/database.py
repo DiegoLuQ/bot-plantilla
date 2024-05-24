@@ -10,7 +10,7 @@ class DatabaseManager:
             {'type': 'dynamodb', 'connection_str': {'region_name': 'us-east-1', 'aws_access_key_id': 'YOUR_ACCESS_KEY_ID', 'aws_secret_access_key': 'YOUR_SECRET_ACCESS_KEY'}}
         ]
         self.mongo_instance = None
-        self.cache = Redis(host="localhost", port=6379, db=0)  # Cache for storing chatbot flow menus
+        self.cache = Redis(host=sett.DB_REDIS, port=sett.DB_REDIS_PORT, db=0)  # Cache for storing chatbot flow menus
 
     async def connect(self, db_type):
         db = next((db for db in self.databases if db['type'] == db_type), None)
