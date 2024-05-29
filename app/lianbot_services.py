@@ -392,11 +392,11 @@ async def clean_text(text):
 import unicodedata
 async def administrar_chatbot(text, number, messageId, name, timestamp, display_number=None):
     list_for = []
-    # text_2 = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
-    # text = text_2.lower().replace(" ", "_")
+    text_2 = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
+    text = text_2.lower().replace(" ", "_")
     db_manager = DatabaseManager()
-    cleaned_text = await clean_text(text)
-    print("user: ",cleaned_text)
+    # cleaned_text = await clean_text(text)
+    print("user: ",text)
     flujo = await db_manager.get_flujo_menu()
 
     # PODRIAMOS MEJORARLO CONSULTANDO A REDIS
