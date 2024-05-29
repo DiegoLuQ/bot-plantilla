@@ -358,7 +358,7 @@ async def Mensaje_Rapido(number, messageId, mensaje=None):
     return await Enviar_MensajeIndividual_Message(number, mensaje, messageId)
 
 import re
-def clean_text(text):
+async def clean_text(text):
     emoji_pattern = re.compile(
     "["
     "\U0001F600-\U0001F64F"  # emoticons
@@ -395,8 +395,8 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
     # text_2 = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
     # text = text_2.lower().replace(" ", "_")
     db_manager = DatabaseManager()
-    cleaned_text = clean_text(text)
-    print("user: ",text)
+    cleaned_text = await clean_text(text)
+    print("user: ",cleaned_text)
     flujo = await db_manager.get_flujo_menu()
 
     # PODRIAMOS MEJORARLO CONSULTANDO A REDIS
