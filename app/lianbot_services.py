@@ -213,7 +213,7 @@ async def Enviar_Flujo_Menu(number, flujo_menu, text, payload=None, messageId=No
     else:
         print("error en la db")
 
-ok
+#ok
 async def Descagar_pdf(number, flujo_pdf, text, payload=None, messageId=None):
     try:
         if flujo_pdf:
