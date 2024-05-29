@@ -428,7 +428,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
             "active":flujo["active"]
         })
     # FLUJO DE MENUS
-    if cleaned_text in planes:
+    if text in planes:
         list_for.append(await planes[text](number, flujo, text, payload, messageId))
         
     # INFORMACION
