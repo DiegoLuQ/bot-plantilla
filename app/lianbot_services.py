@@ -395,8 +395,8 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
     text_2 = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
     text = text_2.lower().replace(" ", "_")
     db_manager = DatabaseManager()
-    # cleaned_text = await clean_text(text)
-    print("user: ",text)
+    cleaned_text = await clean_text(text)
+    print("user: ",cleaned_text)
     flujo = await db_manager.get_flujo_menu()
 
     # PODRIAMOS MEJORARLO CONSULTANDO A REDIS
@@ -428,7 +428,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
             "active":flujo["active"]
         })
     # FLUJO DE MENUS
-    if text in planes:
+    if cleaned_text in planes:
         list_for.append(await planes[text](number, flujo, text, payload, messageId))
         
     # INFORMACION
