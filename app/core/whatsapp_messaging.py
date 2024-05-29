@@ -261,7 +261,7 @@ async def Enviar_Document_Message(number, url, caption, filename):
 
 
 #ENVIAMOS NUESTRA UBICACION AL USUARIO
-async def Ubicacion_Empresa_Message(number, messageId, name, address):
+async def Ubicacion_Empresa_Message(number, messageId, name, address, latitude, longitude):
     data = json.dumps({
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
@@ -271,8 +271,8 @@ async def Ubicacion_Empresa_Message(number, messageId, name, address):
         },
         "type": "location",
         "location": {
-            "latitude": -20.273872272525107,
-            "longitude": -70.09637463862305,
+            "latitude": latitude,
+            "longitude": longitude,
             "name": name,
             "address": address
         },

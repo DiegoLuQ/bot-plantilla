@@ -9,15 +9,19 @@ from database import DatabaseManager
 async def guardar_datos_db(data):
     try:
         # print(data)
-        headers = {'Content-Type': 'application/json'}
+        
+        if data["active"]:
+            headers = {'Content-Type': 'application/json'}
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(f"{sett.API_WSP_MONGO}/v1/user/usuarios/", headers=headers, data=data)
+            async with httpx.AsyncClient() as client:
+                response = await client.post(f"{sett.API_WSP_MONGO}/v1/user/usuarios/", headers=headers, data=data)
 
-        if response.status_code == 200:
-            return 'mensaje guardado', 200
+            if response.status_code == 200:
+                return 'mensaje guardado', 200
+            else:
+                print('error al guardar mensaje', response.status_code)
         else:
-            print('error al guardar mensaje', response.status_code)
+            return
     except Exception as e:
         return str(e), 403
 
@@ -114,18 +118,6 @@ async def Datos_para_descargarImagen(number, imagen_id, messageId):
     return data
 
 
-async def Descagar_pdf(number):
-    try:
-        link = str(sett.doc_pdf)
-        caption = "PDF de nuestros filtros"
-        filename = "Filtros - SF"
-
-        data = await Enviar_Document_Message(number, link, caption, filename)
-        return data
-    except Exception as e:
-        print(e)
-
-
 async def Send_Catalogo_wsp(number):
     try:
         body = "Te presento nuestro catalogo"
@@ -207,8 +199,8 @@ async def Enviar_Lista_Productos(number):
     except Exception as e:
         print(e)
 
-
-async def Enviar_Flujo_Menu(number, flujo_menu, text, payload=None):
+#ok
+async def Enviar_Flujo_Menu(number, flujo_menu, text, payload=None, messageId=None):
     await guardar_datos_db(payload)
     if flujo_menu:
         # Construir el mensaje con los datos recuperados
@@ -221,8 +213,22 @@ async def Enviar_Flujo_Menu(number, flujo_menu, text, payload=None):
     else:
         print("error en la db")
 
+ok
+async def Descagar_pdf(number, flujo_pdf, text, payload=None, messageId=None):
+    try:
+        if flujo_pdf:
+        # Construir el mensaje con los datos recuperados
+            link = flujo_pdf["flujo_pdf"][text]["link"]
+            caption = flujo_pdf["flujo_pdf"][text]["caption"]
+            filename = flujo_pdf["flujo_pdf"][text]["filename"]
 
-async def Enviar_Lista_Servicios(number, flujo_list, text, payload=None):
+        data = await Enviar_Document_Message(number, link, caption, filename)
+        return data
+    except Exception as e:
+        print(e)
+        
+#ok
+async def Enviar_Lista_Servicios(number, flujo_list, text, payload=None, messageId=None):
     await guardar_datos_db(payload)
     if flujo_list:
         options = flujo_list['widget_list'][text]['options']
@@ -234,8 +240,8 @@ async def Enviar_Lista_Servicios(number, flujo_list, text, payload=None):
         data = await Enviar_Lista_Opciones_Message(number, body, header, footer, button, options)
         return data
 
-
-async def Enviar_ButtonImagen(number, flujo, text, payload=None):
+#ok
+async def Enviar_ButtonImagen(number, flujo, text, payload=None, messageId=None):
     await guardar_datos_db(payload)
     if flujo:
         body = flujo['flujo_submenu'][text]['body']
@@ -245,10 +251,21 @@ async def Enviar_ButtonImagen(number, flujo, text, payload=None):
         options = flujo['flujo_submenu'][text]['options']
         data = await ButtonImagenOpciones_Message(number, body, footer, options, link)
         return data
-
-
-async def Enviar_Ubicacion(number, flujo, messageId):
-    pass
+    
+#ok
+async def Enviar_Ubicacion(number, flujo, text, playload=None, messageId=None):
+    print(playload)
+    if flujo:
+        name = flujo['flujo_ubicacion'][text]['name']
+        address = flujo['flujo_ubicacion'][text]['address']
+        latitude = flujo['flujo_ubicacion'][text]['latitude']
+        longitude = flujo['flujo_ubicacion'][text]['longitude']
+        
+    try:
+        data = await Ubicacion_Empresa_Message(number, messageId, name, address, latitude, longitude)
+        return data
+    except Exception as e:
+        print(e)
 
 
 # deprecado
@@ -268,16 +285,6 @@ async def Enviar_Menu_PrimerNegocio(number):
     url_img = "https://i.postimg.cc/PJPRZJBh/e35f9d3b-f59b-44ed-91e2-e6742799baad.png"
     data = await ButtonImagenOpciones_Message(number, body, footer, options, url_img)
     return data
-
-# deprecado
-async def Enviar_MiUbicacion(number, messageId):
-    name = "SF | santiagofiltros.cl"
-    address = "Argentina XXXX"
-    try:
-        data = await Ubicacion_Empresa_Message(number, messageId, name, address)
-        return data
-    except Exception as e:
-        print(e)
 
 
 async def Mensaje_Contactar_Vendedor(number):
@@ -375,7 +382,9 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
         "informacion": Enviar_Flujo_Menu,
         "pagina_web": Enviar_Lista_Servicios,
         "landing_page": Enviar_Lista_Servicios,
-        "chatbot": Enviar_Lista_Servicios
+        "chatbot": Enviar_Lista_Servicios,
+        "ubicacion": Enviar_Ubicacion, 
+        "pdf-lp1": Descagar_pdf
     }
     payload = json.dumps({
             "wsp_text": str(text),
@@ -383,16 +392,14 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
             "wsp_number": str(number),
             "wsp_wamid": messageId,
             "wsp_timestamp": str(timestamp),
-            "wsp_display_phone_number": display_number
-            
+            "wsp_display_phone_number": display_number,
+            "active":flujo["active"]
         })
     # FLUJO DE MENUS
     if text in planes:
-        list_for.append(await planes[text](number, flujo, text, payload))
+        list_for.append(await planes[text](number, flujo, text, payload, messageId))
         
     # INFORMACION
-    elif text in "ubicación?":
-        list_for.append(await Enviar_MiUbicacion(number, messageId))
     elif "enviar ubicación" in text:
         list_for.append(await RecibirUbicacion_Cliente(number))
     elif "lista de productos" in text:
