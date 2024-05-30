@@ -365,11 +365,11 @@ import unicodedata
 async def administrar_chatbot(text, number, messageId, name, timestamp, display_number=None):
     list_for = []
     text_result = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
-    text = text_result.lower().replace(" ", "_")
+    text_2 = text_result.lower().replace(" ", "_")
     
     db_manager = DatabaseManager()
     
-    print("user:",text, "NumberHost: ", display_number)
+    print("user:",text_2, "NumberHost: ", display_number)
     flujo = await db_manager.get_flujo_menu()
 
     # PODRIAMOS MEJORARLO CONSULTANDO A REDIS
@@ -392,7 +392,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
         "pdf-lp1": Descagar_pdf
     }
     payload = json.dumps({
-            "wsp_text": str(text),
+            "wsp_text": str(text_2),
             "wsp_name": name,
             "wsp_number": str(number),
             "wsp_wamid": messageId,
@@ -401,8 +401,8 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
             "active":flujo["active"]
         })
     # FLUJO DE MENUS
-    if text in planes:
-        data = await planes[text](number, flujo, text, payload, messageId)
+    if text_2 in "hola":
+        data = await Enviar_Flujo_Menu(number, flujo, text_2, payload, messageId)
         list_for.append(data)
         
     # INFORMACION
