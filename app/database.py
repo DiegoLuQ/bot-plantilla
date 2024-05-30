@@ -33,6 +33,7 @@ class DatabaseManager:
     async def get_flujo_menu(self, display_number=None):
         #numero del chatbot
         number = "56934888609"
+        print("get_flujo_display: ", display_number)
         """
         SOLUCIONAR PROBLEMA CON REDIS DE LOCAL Y NUBE
         """

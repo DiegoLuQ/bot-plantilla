@@ -370,7 +370,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
     db_manager = DatabaseManager()
     
     print("user:",text, "NumberHost: ", display_number)
-    flujo = await db_manager.get_flujo_menu()
+    flujo = await db_manager.get_flujo_menu(display_number)
 
     # PODRIAMOS MEJORARLO CONSULTANDO A REDIS
     planes = { 
@@ -391,6 +391,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
         "ubicacion": Enviar_Ubicacion, 
         "pdf-lp1": Descagar_pdf
     }
+    
     payload = json.dumps({
             "wsp_text": str(text),
             "wsp_name": name,
