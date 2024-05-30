@@ -5,8 +5,8 @@ services:
     build: 
       context: .
     # este servicio se puede usar sin nginx pero debes habilitar los puertos
-    ports:
-      - "94:94"
+    # ports:
+    #   - "94:94"
     command: uvicorn main:app --reload --proxy-headers --host 0.0.0.0 --port 94
     expose:
       - 94
@@ -36,11 +36,11 @@ services:
     depends_on:
       - bot
 
-# networks:
-#   default:
-#     name: docker-redis_default # web_private_red_webapps #docker-redis_default #dbs_red_db
-#     external: true
-
 networks:
-  wsp-network:
-    driver: bridge
+  default:
+    name: docker-redis_default # web_private_red_webapps #docker-redis_default #dbs_red_db
+    external: true
+
+# networks:
+#   wsp-network:
+#     driver: bridge
