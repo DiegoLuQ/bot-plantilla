@@ -366,7 +366,6 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
     list_for = []
     text_result = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
     text_2 = text_result.lower().replace(" ", "_")
-    
     db_manager = DatabaseManager()
     
     print("user:",text_2, "NumberHost: ", display_number)
