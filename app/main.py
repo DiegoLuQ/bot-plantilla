@@ -45,10 +45,8 @@ async def recibir_mensaje(request: Request, response: Response, token: str = Dep
 
         text = await services.obtener_Mensaje_whatsapp(message)
         timestamp = int(message['timestamp'])
-        
-
-        
-        print("whatsapp: ", body)
+    
+        # print("whatsapp: ", body)
         # print("token: ", token)
         # print("Contando Solicitudes", request_counts)
 

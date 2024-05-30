@@ -8,7 +8,7 @@ from database import DatabaseManager
 
 async def guardar_datos_db(data):
     try:
-        # print(data)
+        data = json.loads(data)
         
         if data["active"]:
             headers = {'Content-Type': 'application/json'}
@@ -17,11 +17,13 @@ async def guardar_datos_db(data):
                 response = await client.post(f"{sett.API_WSP_MONGO}/v1/user/usuarios/", headers=headers, data=data)
 
             if response.status_code == 200:
-                return 'mensaje guardado', 200
+                return 'MGS usuario guardado', 200
             else:
                 print('error al guardar mensaje', response.status_code)
         else:
-            return
+            print("El cliente esta desactivado")
+            return False
+        
     except Exception as e:
         return str(e), 403
 
@@ -201,6 +203,7 @@ async def Enviar_Lista_Productos(number):
 
 #ok
 async def Enviar_Flujo_Menu(number, flujo_menu, text, payload=None, messageId=None):
+    print("en flujo menu")
     await guardar_datos_db(payload)
     if flujo_menu:
         # Construir el mensaje con los datos recuperados
