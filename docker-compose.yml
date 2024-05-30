@@ -21,10 +21,18 @@ services:
       - "1818:80"
     environment:
       - VIRTUAL_PORT=80
-      - VIRTUAL_HOST=wsp.diego-luque.com
-      - LETSENCRYPT_HOST=wsp.diego-luque.com
+      - VIRTUAL_HOST=wsp.luque.site
+      - LETSENCRYPT_HOST=wsp.luque.site
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - bot
+  
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"
     depends_on:
       - bot
 
