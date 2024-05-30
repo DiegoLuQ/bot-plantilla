@@ -203,8 +203,8 @@ async def Enviar_Lista_Productos(number):
 
 #ok
 async def Enviar_Flujo_Menu(number, flujo_menu, text, payload=None, messageId=None):
-    print("en flujo menu")
-    await guardar_datos_db(payload)
+    # print("en flujo menu")
+    # await guardar_datos_db(payload)
     if flujo_menu:
         # Construir el mensaje con los datos recuperados
         body = flujo_menu["flujo_menu"][text]["body"]
@@ -402,7 +402,8 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
         })
     # FLUJO DE MENUS
     if text in planes:
-        list_for.append(await planes[text](number, flujo, text, payload, messageId))
+        data = await planes[text](number, flujo, text, payload, messageId)
+        list_for.append(data)
         
     # INFORMACION
     elif "enviar ubicación" in text:
