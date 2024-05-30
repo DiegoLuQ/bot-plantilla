@@ -34,23 +34,23 @@ class DatabaseManager:
         #numero del chatbot
         number = "56934888609"
 
-        if valor_in_cache:=self.cache.get(number):
-            # Si el valor existe en caché, decodificarlo de bytes a dict
-            flujo_menu = json.loads(valor_in_cache.decode())
-            print("Flujo de menú encontrado en caché")
+        # if valor_in_cache:=self.cache.get(number):
+        #     # Si el valor existe en caché, decodificarlo de bytes a dict
+        #     flujo_menu = json.loads(valor_in_cache.decode())
+        #     print("Flujo de menú encontrado en caché")
+        #     return flujo_menu
+        # else:
+        #     # Si el valor no está en caché, recuperarlo de la base de datos y guardarlo en caché
+        conn = await self.connect('mongodb')
+        flujo_menu = await conn['menu_col'].find_one({"numero_celular": number})
+
+        if flujo_menu:
+            # Almacenar el valor en Redis antes de devolverlo
+            # self.cache.set(number, json.dumps(flujo_menu))
+            # duration = int(sett.DURATION_REDIS_FLUJO if sett.DURATION_REDIS_FLUJO else 3600)
+            # self.cache.expire(number, duration)
+            # print("Flujo de menú recuperado de la base de datos y guardado en caché")
             return flujo_menu
         else:
-            # Si el valor no está en caché, recuperarlo de la base de datos y guardarlo en caché
-            conn = await self.connect('mongodb')
-            flujo_menu = await conn['menu_col'].find_one({"numero_celular": number})
-
-            if flujo_menu:
-                # Almacenar el valor en Redis antes de devolverlo
-                self.cache.set(number, json.dumps(flujo_menu))
-                duration = int(sett.DURATION_REDIS_FLUJO if sett.DURATION_REDIS_FLUJO else 3600)
-                self.cache.expire(number, duration)
-                print("Flujo de menú recuperado de la base de datos y guardado en caché")
-                return flujo_menu
-            else:
-                print("Flujo de menú no encontrado en la base de datos o caché")
-                return None
+            print("Flujo de menú no encontrado en la base de datos o caché")
+            return None

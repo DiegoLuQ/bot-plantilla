@@ -364,11 +364,12 @@ async def Mensaje_Rapido(number, messageId, mensaje=None):
 import unicodedata
 async def administrar_chatbot(text, number, messageId, name, timestamp, display_number=None):
     list_for = []
-    text_result = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
-    text_2 = text_result.lower().replace(" ", "_")
+    print(text)
+    text = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
+    text = text.lower().replace(" ", "_")
     db_manager = DatabaseManager()
     
-    print("user:",text_2, "NumberHost: ", display_number)
+    print("user:",text, "NumberHost: ", display_number)
     flujo = await db_manager.get_flujo_menu()
 
     # PODRIAMOS MEJORARLO CONSULTANDO A REDIS
@@ -391,7 +392,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
         "pdf-lp1": Descagar_pdf
     }
     payload = json.dumps({
-            "wsp_text": str(text_2),
+            "wsp_text": str(text),
             "wsp_name": name,
             "wsp_number": str(number),
             "wsp_wamid": messageId,
@@ -400,9 +401,8 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
             "active":flujo["active"]
         })
     # FLUJO DE MENUS
-    if text_2 in planes:
-        data = await planes[text_2](number, flujo, text, payload, messageId)
-        list_for.append(data)
+    if text in planes:
+        list_for.append(await planes[text](number, flujo, text, payload, messageId))
         
     # INFORMACION
     elif "enviar ubicación" in text:
