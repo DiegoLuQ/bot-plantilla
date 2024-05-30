@@ -38,7 +38,7 @@ async def enviar_Mensaje_whatsapp(data):
 
         async with httpx.AsyncClient() as client:
             response = await client.post(whatsapp_url, headers=headers, data=data)
-        print(response.status_code)
+            
         if response.status_code == 200:
             print('mensaje guardado', 200)
             return 'mensaje guardado', 200
@@ -401,8 +401,8 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
             "active":flujo["active"]
         })
     # FLUJO DE MENUS
-    if text_2 in "hola":
-        data = await Enviar_Flujo_Menu(number, flujo, text_2, payload, messageId)
+    if text_2 in planes:
+        data = await planes[text_2](number, flujo, text, payload, messageId)
         list_for.append(data)
         
     # INFORMACION
