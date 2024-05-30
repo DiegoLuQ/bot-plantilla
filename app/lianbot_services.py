@@ -357,46 +357,16 @@ async def Enviar_Imagenes(number):
 async def Mensaje_Rapido(number, messageId, mensaje=None):
     return await Enviar_MensajeIndividual_Message(number, mensaje, messageId)
 
-import re
-async def clean_text(text):
-    emoji_pattern = re.compile(
-    "["
-    "\U0001F600-\U0001F64F"  # emoticons
-    "\U0001F300-\U0001F5FF"  # symbols & pictographs
-    "\U0001F680-\U0001F6FF"  # transport & map symbols
-    "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-    "\U00002500-\U00002BEF"  # chinese char
-    "\U00002702-\U000027B0"
-    "\U00002702-\U000027B0"
-    "\U000024C2-\U0001F251"
-    "\U0001f926-\U0001f937"
-    "\U00010000-\U0010ffff"
-    "\u2640-\u2642"
-    "\u2600-\u2B55"
-    "\u200d"
-    "\u23cf"
-    "\u23e9"
-    "\u231a"
-    "\u3030"
-    "\ufe0f"
-    "]+", flags=re.UNICODE
-)
-    text = emoji_pattern.sub(r'', text)  # Eliminar emojis
-    text = text.lower()  # Convertir a minúsculas
-    text = re.sub(r'\W+', '', text)  # Eliminar caracteres no alfanuméricos
-    text_2 = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
-    return text_2
-
-
 
 import unicodedata
 async def administrar_chatbot(text, number, messageId, name, timestamp, display_number=None):
     list_for = []
-    text_2 = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
-    text = text_2.lower().replace(" ", "_")
+    text_result = unicodedata.normalize("NFKD", text).encode("ascii","ignore").decode("ascii")
+    text = text_result.lower().replace(" ", "_")
+    
     db_manager = DatabaseManager()
-    cleaned_text = await clean_text(text)
-    print("user: ",cleaned_text)
+    
+    print("user:",text, "NumberHost: ", display_number)
     flujo = await db_manager.get_flujo_menu()
 
     # PODRIAMOS MEJORARLO CONSULTANDO A REDIS
@@ -410,11 +380,11 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
         "pro_cod:cb2":Enviar_ButtonImagen,
         "avanzado_cod:cb3":Enviar_ButtonImagen,
         "hola": Enviar_Flujo_Menu,
-        "servicios": Enviar_Flujo_Menu,
+        "productos": Enviar_Flujo_Menu,
         "informacion": Enviar_Flujo_Menu,
         "pagina_web": Enviar_Lista_Servicios,
         "landing_page": Enviar_Lista_Servicios,
-        "chatbot": Enviar_Lista_Servicios,
+        "chat_bot": Enviar_Lista_Servicios,
         "ubicacion": Enviar_Ubicacion, 
         "pdf-lp1": Descagar_pdf
     }
@@ -428,7 +398,7 @@ async def administrar_chatbot(text, number, messageId, name, timestamp, display_
             "active":flujo["active"]
         })
     # FLUJO DE MENUS
-    if cleaned_text in planes:
+    if text in planes:
         list_for.append(await planes[text](number, flujo, text, payload, messageId))
         
     # INFORMACION

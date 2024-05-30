@@ -30,7 +30,7 @@ class DatabaseManager:
             if self.mongo_instance:
                 await self.mongo_instance.close()
 
-    async def get_flujo_menu(self):
+    async def get_flujo_menu(self, display_number=None):
         #numero del chatbot
         number = "56934888609"
 
